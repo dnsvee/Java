@@ -11,5 +11,7 @@ public class Starter {
 		Prisoners100 pris100 = new Prisoners100();
 		
 		AplusB ap = new AplusB();
+
+		CountWords cw = new CountWords();
 	}
 }
