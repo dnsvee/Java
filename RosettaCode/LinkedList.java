@@ -1,10 +1,14 @@
 import java.lang.StringBuilder;
 import java.lang.RuntimeException.*;
 import java.lang.*;
+import java.util.function.*;
+import java.util.function.Function;
 
-// linked list implementation
-public class LinkedList<E> {
+// double linked list implementation
+public class LinkedList<E extends Object> {
 	static public void main(String[] args) {
+		// some tests
+		// converts the list into a string for testing purposes
 		LinkedList<String> ll = new LinkedList<>();
 
 		ll.push("one", "two", "three");
@@ -23,6 +27,11 @@ public class LinkedList<E> {
 		ll.clear();
 
 		ll.push("1", "2", "3", "4", "5");
+		ll.map((e) -> e += "!");
+		ll.forEach((e) -> System.out.printf("%s\n", e));
+		ll.clear();
+
+		ll.push("1", "2", "3", "4", "5");
 		ll.remove(1);
 		ll.check("[1, 3, 4, 5]", 4);
 		ll.remove(0);
@@ -36,11 +45,17 @@ public class LinkedList<E> {
 		System.out.println("all tests passed");
 	}
 
-	void check(String s, int i) {
-		if (!toString().equals(s) || i != size())
-			throw new RuntimeException(String.format("assert fail: %s != %s or %d != %d\n", toString(), s, i, size()));
+	// default constructor
+	public LinkedList() {
 	}
 
+	// compares the string rep. of the LinkedList against the provided string s
+	void check(String s, int i) {
+		if (!toString().equals(s))
+			throw new RuntimeException(String.format("assert fail: %s != %s or %d != %d\n", toString(), s, i, length()));
+	}
+
+	// internal node impl.
 	class Node {
 		Node next;
 		Node prev;
@@ -54,16 +69,16 @@ public class LinkedList<E> {
 		}
 	}
 
+	// head and tail of list
 	private Node head = null;
 	private Node last = null;
 
-	private int  len  = 0;
+	// length of list
+	private int len  = 0;
 
-	public int size() {
+	// returns length
+	public int length() {
 		return len;
-	}
-
-	public LinkedList() {
 	}
 
 	// add first elem. to list
@@ -73,8 +88,27 @@ public class LinkedList<E> {
 		last = head;
 	}
 
+	// add multiple leems to lsit
 	public void push(E... es) {
 		for (E e : es) push(e);
+	}
+
+	// calls function on each elem.
+	public void forEach(Consumer<E> c) {
+		Node cur = head;
+		for(int i = 0; i < len; i++) {
+			c.accept(cur.elem);
+			cur = cur.next;
+		}
+	}
+
+	// calls function on each elem and updates value with result of function
+	public void map(Function<E, E> f) {
+		Node cur = head;
+		for(int i = 0; i < len; i++) {
+			cur.elem = f.apply(cur.elem);
+			cur = cur.next;
+		}
 	}
 
 	// add at end
@@ -130,9 +164,7 @@ public class LinkedList<E> {
 
 			break;
 		}
-
 	}
-
 
 	// insert at begin
 	public void unshift(E e) {
@@ -147,12 +179,12 @@ public class LinkedList<E> {
 		len++;
 	}
 
+	// insert multiple values at beginning
 	public void unshift(E... es) {
 		for (E e : es) unshift(e);
 	}
 
-
-	// removes and returns head
+	// removes and returns from the beginning
 	public Node shift(E e) {
 		if (len == 0) return null;
 
@@ -167,14 +199,13 @@ public class LinkedList<E> {
 		return n;
 	}
 
-
-
 	// remove all nodes
 	public void clear() {
-		while (size() != 0) pop();
+		while (length() != 0) pop();
 	}
 
-	// string repr. calls toString on each elem. and result == [elem1, elem2, elem3]
+	// string repr. calls toString on each elem. and result == [elem1, elem2, elem3, ...]
+	// eg. [1,2,3] or []
 	public String toString() {
 		StringBuilder sb = new StringBuilder("");
 		Node cur = head;
@@ -188,11 +219,8 @@ public class LinkedList<E> {
 		return sb.toString();
 	}
 
+	// print to stdout
 	void print() {
 		System.out.println(toString());
-	}
-
-	// bunch of tests
-	static public void test() {
 	}
 };
