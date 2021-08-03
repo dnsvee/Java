@@ -3,6 +3,7 @@ package Treap;
 import java.lang.Integer;
 import java.util.Random;
 import java.lang.RuntimeException;
+import java.util.function.Consumer;
 
 // a treap; a datastructure that combines a binary heap and a tree
 public class Treap<K extends Comparable<K>> {
@@ -87,31 +88,8 @@ public class Treap<K extends Comparable<K>> {
 	}	
 
 	// search for element and return true if found; otherwise null
-	public boolean search(K k) {
+	public boolean contains(K k) {
 		return search(root, k) == null;
-	}
-
-	// use for testing of Treap
-	public class Test<K extends Comparable<K>> {
-		Treap<K> t;
-
-		public Test() {
-			t = new Treap<>();
-		}
-
-		public void find(K... args) {
-			for (K k : args) {
-				if (t.search(k) == null) throw new RuntimeException("bummer");
-			}
-		}
-	}
-
-	public void findt(K k) {
-		if (search(k) == null) throw new RuntimeException("findt failed: Element " + k.toString() + " not found");
-	}
-
-	public void findf(K k) {
-		if (search(k) != null) throw new RuntimeException("findf failed: Element " + k.toString() + " found");
 	}
 
 	// remove element from Treap
@@ -119,10 +97,9 @@ public class Treap<K extends Comparable<K>> {
 		root = remove(k, root);
 	}
 
-	// util method for remove
-	// this methode may change the structure of the Treap starting from Node n
-	// this method will return the root of the Treap it has operated on
-	// return value == n if structure has not changed
+	// called by remove(K, k)
+	// this method may change the structure of the Treap starting from Node n
+	// returns the (possibly) root of the Treap it has operated on
 	public Node remove(K k, Node n) {
 		if (n == null) return null;
 
@@ -162,18 +139,20 @@ public class Treap<K extends Comparable<K>> {
 		return n;
 	}
 
-	// insert elem k in tree
-	public void insert(K k) {
-		// if empty tree insert as root
+	// add elem k in tree
+	public void add(K k) {
+		// if empty tree add as root
 		if (root == null) {
 			root = new Node(k);
 			sz++;
 			return;
 		}
-		// insert into root
-		root = insert(k, root);
+
+		// add into root
+		root = add(k, root);
 	}
 
+	// rotates n to left so node in right subtree becomes new root
 	public Node rotateLeft(Node n) {
 		Node t  = n.right;
 		n.right = n.right.left;
@@ -182,6 +161,7 @@ public class Treap<K extends Comparable<K>> {
 		return t;
 	}
 
+	// rotates n to the so node in right subtree becomes new root
 	public Node rotateRight(Node n) {
 		Node t = n.left;
 		n.left = n.left.right;
@@ -190,24 +170,24 @@ public class Treap<K extends Comparable<K>> {
 		return t;
 	}
 
-	// util. method for insert
-	// may change the structure of the subtree with root n so this method will return
-	// the root of the subtree it has inserted element into; or it returns the original
+	// called by add(K k)
+	// may change the structure of the subtree 
+	// returns the (possibly new) root
 	// root
-	public Node insert(K k, Node n) {
+	public Node add(K k, Node n) {
 		if (k == n.elem) return n;
 
-		// insert in left side
+		// add in left side
 		if (k.compareTo(n.elem) < 0) {
 			if (n.left != null)  
-				// remove further down into subtree
-				n.left = insert(k, n.left);
+				// add further down into subtree
+				n.left = add(k, n.left);
 			else 
-				// insert as new leaf
+				// add as new leaf
 				n.left = new Node(k);
 
-			// when inserted as leaf move back upwards
-			// and fix each level by doing a proper rotate
+			// when added as leaf move back upwards
+			// and fix each level by doing the proper rotate
 			if (n.left.prio < n.prio) 
 				return rotateRight(n);
 			else 
@@ -215,7 +195,7 @@ public class Treap<K extends Comparable<K>> {
 		} else {
 			// do the same thing in the other side
 			if (n.right != null) 
-				n.right = insert(k, n.right);
+				n.right = add(k, n.right);
 			else 
 				n.right = new Node(k);
 
@@ -227,7 +207,7 @@ public class Treap<K extends Comparable<K>> {
 	}
 
 	// test if node has valid ordering
-	// smaller value  to the left; greater value to the right
+	// smaller value to the left; greater value to the right
 	// highest priority as root
 	boolean testNode(Node n) {
 		if (n.left != null) {
@@ -252,4 +232,15 @@ public class Treap<K extends Comparable<K>> {
 		return testNode(root);
 	}
 
+	// visit elements bfs
+	public void visit(Consumer<K> fun, Node n) {
+		if (n.left != null) visit(fun, n.left);
+		fun.accept(n.elem);
+		if (n.right!= null) visit(fun, n.right);
+	}
+
+	// calls fun on each elem in order
+	public void forEach(Consumer<K> fun) {
+		visit(fun, root);
+	}	
 }

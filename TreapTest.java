@@ -1,46 +1,64 @@
 import Treap.Treap;
 
 public class TreapTest {
+	public static class Test<K extends Comparable<K>> {
+		Treap<K> t;
+
+		public Test(Treap<K> treap) {
+			t = treap;
+		}
+
+		public void exist(K... args) {
+			for (K k : args) {
+				if (t.contains(k)) 
+					throw new RuntimeException("exist failed: Element " + k.toString() + " not found");
+			}
+		}
+
+		public void notexist(K... args) {
+			for (K k : args) {
+				if (!t.contains(k)) 
+					throw new RuntimeException("not exist failed: Element " + k.toString() + " found");
+			}
+		}
+	}
+
 	static public void main(String[] args) {
 		Treap<Integer> t = new Treap<>();
-		t.insert(1);
-		t.insert(3);
-		t.insert(2);
-		t.insert(5);
-		t.insert(4);
-		t.findt(1);
-		t.findt(3);
-		t.findt(2);
-		t.findt(5);
-		t.findt(4);
+		Test<Integer> tt = new Test<>(t);
+		t.add(1);
+		t.add(3);
+		t.add(2);
+		t.add(5);
+		t.add(4);
+		tt.exist(1, 3, 2, 4, 5);
+		tt.notexist(0, 6);
 
-		t.findf(0);
-		t.findf(6);
-
-		System.out.printf("%s\n", t.toString());
-
-		t.remove(1);
+		t.forEach((Integer i) -> System.out.printf("%d\n", i));
 		System.out.printf("%s\n", t.toString());
 
 		t.remove(3);
-		System.out.printf("%s\n", t.toString());
+		tt.exist(1, 2, 4, 5);
+		tt.notexist(3);
+
+		t.remove(1);
+		tt.exist(2, 4, 5);
+		tt.notexist(1, 3);
 
 		t.remove(5);
-		System.out.printf("%s\n", t.toString());
+		tt.exist(2, 4);
+		tt.notexist(1, 3, 5);
 
 		t.remove(2);
-		System.out.printf("%s\n", t.toString());
+		tt.exist(4);
+		tt.notexist(1, 2, 3, 5);
 
 		t.remove(4);
-		System.out.printf("%s\n", t.toString());
-
+		tt.notexist(1, 2, 3, 4, 5);
 
 		if (!t.testIfTreapValid()) 
 			System.out.println("Not a valid Treap");
 		else
 			System.out.println("Valid Treap");
-
-		System.out.printf("%s\n", t.toString());
-
 	}
 }
