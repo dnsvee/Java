@@ -20,7 +20,6 @@ public class Treap<K extends Comparable<K>> {
 			elem = k;
 			//prio = rand.nextInt(Integer.MAX_VALUE);
 			prio = rand.nextInt(1000);
-			System.out.printf("%d\n", prio);
 		}
 	}
 
