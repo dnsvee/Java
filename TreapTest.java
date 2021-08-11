@@ -39,11 +39,20 @@ public class TreapTest {
 	public static void test1() {
 		Treap<Integer> t = new Treap<>();
 		System.out.println("Treap.addAll(1, 3, 2, 5, 4)");
-		System.out.printf("Treap.toString() == %s\n", t.toString());
 		t.addAll(Arrays.asList(1, 3, 2, 5, 4));
+		assertTrue(t.toString().equals("(1, 2, 3, 4, 5)"), "toString() != (1, 2, 3, 4, 5)");
 
-		Integer[] arr = {1, 2, 3, 4, 5};
-		assertTrue(Arrays.equals(arr, t.toArray()), "Treap.toArray() != [1, 2, 3, 4, 5]");
+		// toArray test
+		Integer[] arr  = {1, 2, 3, 4, 5};
+		Integer[] arr0 = { };
+
+		assertTrue( Arrays.equals(arr,  t.toArray()), "Treap.toArray() != [1, 2, 3, 4, 5]");
+		assertTrue( t.size() == 5, "Treap.size() != 5");
+		assertTrue(!Arrays.equals(arr0, t.toArray()), "Treap.toArray() != [1, 2, 3, 4, 5]");
+
+		// enhanced for loop
+		for(Integer i : t) 
+			System.out.println(i);
 
 		assertTrue(t.contains(1, 2, 3, 4, 5), "assertTrue: t.contains(1, 2, 3, 4, 5) != true");
 
@@ -63,13 +72,15 @@ public class TreapTest {
 		assertFalse(t.contains(4), "assertFalse: t.contains(4) != false");
 	}
 
-	// sorting test
+	// sorting test 
+	// add a bunch of numbers to a Treap and a TreeSet which sorts them
+	// compare with Collections.sort
 	public static void test2() {
 		ArrayList<Integer> nums = new ArrayList<>();
 		Treap<Integer>     ti   = new Treap<>();
 		TreeSet<Integer>   tsi  = new TreeSet<Integer>();
 
-		for(int i = 0; i < 1024 * 1024 * 2; i++)
+		for(int i = 0; i < 1024 * 1024; i++)
 			nums.add(i);
 
 		Collections.shuffle(nums);
@@ -79,13 +90,13 @@ public class TreapTest {
 		c.start();
 		tsi.addAll(nums);
 
-		System.out.printf("Insert 2Mb numbers in TreeSet in %dms\n", c.end());
+		System.out.printf("Insert 1Mb numbers in TreeSet in %dms\n", c.end());
 		tsi.clear();
 
 		c.start();
 		ti.addAll(nums);
 
-		System.out.printf("Insert 2Mb numbers in Treap in %dms\n", c.end());
+		System.out.printf("Insert 1Mb numbers in Treap in %dms\n", c.end());
 		if (!ti.isValid()) throw new RuntimeException("Invalid Treap after adding numbers");
 		ti.clear();
 
@@ -95,6 +106,8 @@ public class TreapTest {
 	}
 
 	public static void test3() {
+		// add and remove a bunch of words and compare TreeSet (a similar datastructure)
+		//
 		Treap<String>     t  = new Treap<>();
 		TreeSet<String>   ts = new TreeSet<>();
 		ArrayList<String> ws = new ArrayList<>();
@@ -106,29 +119,31 @@ public class TreapTest {
 
 			Collections.shuffle(ws);
 
+			// random select a 1000 words to remove
 			List<String> sub = ws.subList(0, 1000);
 
 			Clock c = new Clock();
 
+			// add nd remove from TreeSet
 			c.start();
 			ts.addAll(ws);
 
 			for (String w : sub) 
-				if (ts.contains(w)) 
-					ts.remove(w);
+				ts.remove(w);
+
 			
 			System.out.printf("TreeSet: add wordlist and remove 1000 random words from TreeSet in %dms\n", c.end());
 
+			// same with Treap
 			c.start();
 			t.addAll(ws);
 
 			for (String w : sub) 
-				if (t.contains(w)) 
-					t.remove(w);
+				t.remove(w);
 
-			if (!t.isValid()) throw new RuntimeException("Invalid Treap after inserting wordlist");
+			assertTrue(t.isValid(), "Invalid Treap after inserting wordlist");
 			
-			System.out.printf("Treap: add wordlist and remove 1000 random words from TreeSet in %dms\n", c.end());
+			System.out.printf("Treap: add wordlist and remove 1000 random words from Treap  in %dms\n", c.end());
 
 		} catch(FileNotFoundException ex) {
 			System.out.println("words.txt not found");

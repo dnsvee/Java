@@ -4,7 +4,10 @@ import java.lang.Integer;
 import java.lang.Comparable;
 import java.util.Random;
 import java.util.List;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.ArrayList;;
+import java.util.Stack;
 import java.lang.RuntimeException;
 import java.util.function.Consumer;
 import java.util.function.BiConsumer;
@@ -15,7 +18,7 @@ import java.util.Collection;
 // it's an alternative to a traditional red/black or AVL tree
 //
 // use hash value of element as priority for maintaining the heap ordering  
-public class Treap<K extends Comparable<K>> {
+public class Treap<K extends Comparable<K>> implements Iterable<K> {
 
 	Random rand = new Random();
 
@@ -76,10 +79,6 @@ public class Treap<K extends Comparable<K>> {
 		});
 		sb.append(")");
 		return sb.toString();
-
-		//if (root == null) return new String("()");
-
-		//return toStringSB(root, new StringBuilder()).toString();
 	}
 
 	// test if equal; only true is o is Treap and contains same elements
@@ -326,21 +325,21 @@ public class Treap<K extends Comparable<K>> {
 	// visit elements bfs order
 	// call fun for each elem
 	// start at Node n
-	public void visit(Consumer<K> fun, Node n) {
+	public void visit(Consumer<? super K> fun, Node n) {
 		if (n.left != null) visit(fun, n.left);
 		fun.accept(n.elem);
 		if (n.right!= null) visit(fun, n.right);
 	}
 
 	// calls fun on each elem in order
-	public void forEach(Consumer<K> fun) {
+	public void forEach(Consumer<? super K> fun) {
 		if (root == null) return;
 		visit(fun, root);
 	}	
 
 	//  visit elements bfs order
 	//  pass index of element to fun 
-	public int visit(BiConsumer<K, Integer> fun, Node n, int i) {
+	public int visit(BiConsumer<? super K, Integer> fun, Node n, int i) {
 		if (n.left != null) i = visit(fun, n.left, i);
 		fun.accept(n.elem, i);
 		i++;
@@ -350,8 +349,45 @@ public class Treap<K extends Comparable<K>> {
 
 
 	// calls fun on each elem in order and pass index of element to fun
-	public void forEach(BiConsumer<K, Integer> fun) {
+	public void forEach(BiConsumer<? super K, Integer> fun) {
 		if (root == null) return;
 		visit(fun, root, 0);
+	}
+
+	public Iterator<K> iterator() {
+		Treap<K> treap = this;
+		Stack<Node> st = new Stack<Node>();
+	
+		if (root != null) {	
+			st.push(root);
+			while (st.peek().left != null) 
+				st.push(st.peek().left);
+		}
+
+		// maybe return a specific iterator for when root == null
+		return new Iterator<K>() {
+			public boolean hasNext() {
+				return !st.isEmpty() && treap.root != null;
+			}
+
+			public K next() {
+				if (st.isEmpty() || treap.root == null) 
+					return null;
+
+				Node n = st.pop();
+
+				if (n.right != null) {
+					st.push(n.right);
+					while (st.peek().left != null) 
+						st.push(st.peek().left);
+				}
+
+				return n.elem;
+			}
+
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+		};
 	}
 }

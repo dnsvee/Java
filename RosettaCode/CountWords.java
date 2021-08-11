@@ -3,8 +3,10 @@ import java.util.Scanner;
 import java.io.*;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
-
+// impl. RosettaCode task of Counting Words in the ebook 'Les Miserables'
 public class CountWords {
 	public CountWords() {
 		StringBuilder sb = new StringBuilder();
@@ -15,21 +17,15 @@ public class CountWords {
 			s = sc.next();
 		} catch (FileNotFoundException fnf) {
 			System.out.println("file not found");
-
 		}
 
-		String[] ss = s.split("\\s+");
-
-		System.out.println(ss.length);
+		Matcher m = Pattern.compile("(\\w+)").matcher(s);
 
 		Set<String> uq = new HashSet<>();
-
-		for(int i = 0; i < ss.length; i++) {
-			uq.add(ss[i].toLowerCase());
+		while (m.find()) {
+			uq.add(m.group(1).toLowerCase());
 		}
 
 		System.out.printf("Unique words in 'Les Miserables is %d\n", uq.size());
-
-
 	}
 };
