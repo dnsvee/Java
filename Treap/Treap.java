@@ -45,9 +45,6 @@ public class Treap<K extends Comparable<K>> implements Iterable<K> {
 	public Treap() {
 	}
 
-	public Treap(Collection<? extends Comparable<? extends K>> col) {
-	}
-
 	// size of Treap
 	public int size() {
 		return sz;
@@ -84,20 +81,32 @@ public class Treap<K extends Comparable<K>> implements Iterable<K> {
 	// test if equal; only true is o is Treap and contains same elements
 	// NOT DONE
 	public boolean equals(Object o) {
-		if (o    == null) 
+		if (o == null || this == null) 
 			return false;
 
-		if (this == null) 
-			return false;
+		if (o == this) 
+			return true;
 
 		if (o.getClass() != this.getClass()) 
 			return false;
 
 		Treap<?> t = (Treap<?>) o;
 
-		// contains the same elem.s
+		if (t.size() != size()) 
+			return false;
 
-		return true;
+		Iterator<?> it1 = iterator();
+		Iterator<?> it2 = iterator();
+
+		// compare each element; if two don't match collections is not equal
+		while (it1.hasNext() && it2.hasNext()) {
+			if (!it1.next().equals(it2.next()))
+				return false;
+		}
+
+		// only return true when both answers are false aka all elements 
+		// have been visited and compared suuccesfully
+		return it1.hasNext() == it2.hasNext();
 	}
 
 	// utility for toString()
@@ -213,6 +222,10 @@ public class Treap<K extends Comparable<K>> implements Iterable<K> {
 	}
 
 	public void addAll(Collection<? extends K> c) {
+		for(K k : c) add(k);
+	}
+
+	public void addAll(K... c) {
 		for(K k : c) add(k);
 	}
 

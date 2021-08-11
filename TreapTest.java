@@ -38,7 +38,7 @@ public class TreapTest {
 
 	public static void test1() {
 		Treap<Integer> t = new Treap<>();
-		System.out.println("Treap.addAll(1, 3, 2, 5, 4)");
+		System.out.println("Doing some tests on the Treap.java class");
 		t.addAll(Arrays.asList(1, 3, 2, 5, 4));
 		assertTrue(t.toString().equals("(1, 2, 3, 4, 5)"), "toString() != (1, 2, 3, 4, 5)");
 
@@ -50,12 +50,10 @@ public class TreapTest {
 		assertTrue( t.size() == 5, "Treap.size() != 5");
 		assertTrue(!Arrays.equals(arr0, t.toArray()), "Treap.toArray() != [1, 2, 3, 4, 5]");
 
-		// enhanced for loop
-		for(Integer i : t) 
-			System.out.println(i);
 
 		assertTrue(t.contains(1, 2, 3, 4, 5), "assertTrue: t.contains(1, 2, 3, 4, 5) != true");
 
+		// remove all elements one by one and check if they are removed
 		t.remove(1);
 		assertFalse(t.contains(1), "assertFalse: t.contains(1) != false");
 
@@ -70,6 +68,27 @@ public class TreapTest {
 
 		t.remove(4);
 		assertFalse(t.contains(4), "assertFalse: t.contains(4) != false");
+
+		assertTrue( t.size() == 0, "Treap.size() != 5");
+		assertTrue(t.isValid(), "!Treap.isValid()");
+
+		t.addAll(1, 3, 2, 5, 4);
+		assertTrue(t.toString().equals("(1, 2, 3, 4, 5)"), "toString() != (1, 2, 3, 4, 5)");
+
+		Treap<Integer> t2 = new Treap<>();
+		for(Integer i : t) 
+			t2.add(i);
+		t2.add(6);
+
+		// test equals
+		assertFalse(t.equals(t2), "assertFalse: t == t2");
+		t2.remove(6);
+		assertTrue(t.equals(t2),  "assertTrue:  t != t2");
+		t2.remove(1);
+		assertFalse(t.equals(t2), "assertFalse: t == t2");
+		assertFalse(t.equals(new TreeSet<Integer>()), "assertFalse: t == TreeSet()");
+		assertTrue(t.equals(t),  "assertTrue:  t != t");
+
 	}
 
 	// sorting test 
@@ -106,8 +125,7 @@ public class TreapTest {
 	}
 
 	public static void test3() {
-		// add and remove a bunch of words and compare TreeSet (a similar datastructure)
-		//
+		// add and remove a bunch of words in Treap and TreeSet and compare (a similar datastructure)
 		Treap<String>     t  = new Treap<>();
 		TreeSet<String>   ts = new TreeSet<>();
 		ArrayList<String> ws = new ArrayList<>();
@@ -151,6 +169,7 @@ public class TreapTest {
 	}
 
 	static public void main(String[] args) {
+		// execute a bunch of tests
 		test1();
 		test2();
 		test3();
