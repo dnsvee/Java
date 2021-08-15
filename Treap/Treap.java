@@ -20,8 +20,6 @@ import java.util.Collection;
 // tree remains balanced by assigning a random number to each node and
 // making sure higher random values dominate nodes with lower values
 // is balanced with approx.
-//
-// use hash value of element as priority for maintaining the heap ordering  
 public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K> {
 
 	// used for generating random priorities
@@ -420,7 +418,7 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 	}
 
 	// creates an iterator that will visit each element in-order
-	//
+	// and can be used by an enhanced for loop
 	public Iterator<K> iterator() {
 		Treap<K> treap = this;
 
@@ -465,10 +463,10 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 		};
 	}
 
+	// write some special logic for this
 	public boolean retainAll(Collection<?> c) {
 		throw new UnsupportedOperationException();
 	}	
-
 
 	public <T> T[] toArray(T[] a) {
 		throw new UnsupportedOperationException();
