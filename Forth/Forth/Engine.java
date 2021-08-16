@@ -10,18 +10,28 @@ import java.util.function.*;
 import java.util.regex.*;
 
 public class Engine {
+	// running stack
 	public Stack<Object>       Stack;
+
+	// all compiled words and literals and builtins
 	public Stack<Object>       Dict;
+
+	// IP of current instruction running
 	public int                 IP;
+
+	// used for returning from called word
 	public int[]               Trail  = new int[128];
+
+	// util. stack
 	public Stack<Object>       Stuff;
+
+	// input buffer split into words
 	public ArrayDeque<String>  Words;
+
+	// top of last compiled words
 	public int                 top;
 
-	Consumer<Object> literal(Object o, Object o2) {
-		return (Object o3) -> o.toString();
-	}
-
+	// constructor
 	public Engine() {
 		Dict  = new Stack();
 		Stack = new Stack();
@@ -29,46 +39,34 @@ public class Engine {
 		Words = new ArrayDeque<String>();
 		IP    = 0;
 
-
 		top   = -1;
 
-		Consumer<Engine> c = (Engine) -> {
-		};
-
+		// add builtins
 		builtin("say",  (Engine E) -> System.out.println("hello"));
 		builtin("puts", (Engine E) -> System.out.println(Stack.pop()));
 		builtin("+",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
-			if (b instanceof Float) {
-				Stack.push(a.floatValue() + b.floatValue());
-				return;
-			}
-
-			if (Stack.peek() instanceof Integer) {
-				Stack.push(a.intValue() + b.intValue());
-				return;
-			}
+			Stack.add(b.doubleValue() + a.doubleValue());
 		});
 		builtin("-",    (Engine E) -> {
+			Number b = (Number) Stack.pop();
+			Number a = (Number) Stack.pop();
+			Stack.add(b.doubleValue() - a.doubleValue());
 		});
 		builtin("*",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
-			if (b instanceof Float) {
-				Stack.push(a.floatValue() * b.floatValue());
-				return;
-			}
-
-			if (Stack.peek() instanceof Integer) {
-				Stack.push(a.intValue() * b.intValue());
-				return;
-			}
+			Stack.add(b.doubleValue() * a.doubleValue());
 		});
 		builtin("/",    (Engine E) -> {
+			Number b = (Number) Stack.pop();
+			Number a = (Number) Stack.pop();
+			Stack.add(b.doubleValue() / a.doubleValue());
 		});
 	}
 
+	// compile a builtin word
 	public void builtin(String s, Consumer<Engine> c) {
 		Dict.add(s);
 		Dict.add(1);   // builtin
@@ -77,6 +75,8 @@ public class Engine {
 		top = Dict.size() - 4;
 	}
 
+	// find a word with the name of s
+	// return location otherwise -1 if not found
 	public int find(String s) {
 		int cur = top;
 		while (cur != -1) {
@@ -88,13 +88,13 @@ public class Engine {
 		return -1;
 	}
 
+	// compile a literal word unto the dictionary
 	public void makeLiteral(Object o) {
-		Consumer<Engine> c = (Engine) -> {
-			Stack.push(o);
-		};
+		Consumer<Engine> c = (Engine) -> Stack.push(o);
 		Dict.push(c);
 	}
 
+	// compile all words and then run the program
 	public void eval() {
 		preparse();
 
@@ -120,12 +120,19 @@ public class Engine {
 			}
 		}
 
-		for(int i = start; i < Dict.size(); i++) {
-			((Consumer<Engine>) Dict.get(i)).accept(this);
+		Consumer<Engine> c = (Engine e) -> {
+			throw new RuntimeException();
+		};
+		Dict.push(c);
+
+		IP = start;
+		while (true) {
+			((Consumer<Engine>) Dict.get(IP)).accept(this);
+			IP++;
 		}
 	}
 
-	// return empty string when done
+	// parse a word and put it on the stack
 	public void parse() {
 		if (Words.size() == 0) 
 			throw new RuntimeException();
@@ -133,6 +140,7 @@ public class Engine {
 		Stack.push(Words.removeFirst());
 	}
 
+	// split script to load into seperate words
 	public void preparse() {
 		Matcher m = Pattern.compile("(\\S+)").matcher((String) Stack.pop());
 
