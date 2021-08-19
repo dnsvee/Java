@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.lang.*;
 import java.util.function.*;
 import java.util.regex.*;
+import java.lang.Math;
 
 public class Engine {
 	// running stack
@@ -47,22 +48,71 @@ public class Engine {
 		builtin("+",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
-			Stack.add(b.doubleValue() + a.doubleValue());
+			Stack.add(a.doubleValue() + b.doubleValue());
 		});
 		builtin("-",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
-			Stack.add(b.doubleValue() - a.doubleValue());
+			Stack.add(a.doubleValue() - b.doubleValue());
 		});
 		builtin("*",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
-			Stack.add(b.doubleValue() * a.doubleValue());
+			Stack.add(a.doubleValue() * b.doubleValue());
 		});
 		builtin("/",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
-			Stack.add(b.doubleValue() / a.doubleValue());
+			Stack.add(a.doubleValue() / b.doubleValue());
+		});
+		builtin("max",    (Engine E) -> {
+			Number b = (Number) Stack.pop();
+			Number a = (Number) Stack.pop();
+			Stack.add(Math.max(a.doubleValue(), b.doubleValue()));
+		});
+		builtin("min",    (Engine E) -> {
+			Number b = (Number) Stack.pop();
+			Number a = (Number) Stack.pop();
+			Stack.add(Math.min(a.doubleValue(), b.doubleValue()));
+		});
+		builtin("**",    (Engine E) -> {
+			Number b = (Number) Stack.pop();
+			Number a = (Number) Stack.pop();
+			Stack.add(Math.pow(a.doubleValue(), b.doubleValue()));
+		});
+		builtin("sqrt",    (Engine E) -> {
+			Number a = (Number) Stack.pop();
+			Stack.add(Math.sqrt(a.doubleValue()));
+		});
+		builtin("abs",    (Engine E) -> {
+			Number a = (Number) Stack.pop();
+			Stack.add(Math.abs(a.doubleValue()));
+		});
+		builtin("PI",    (Engine E) -> {
+			Stack.add(Math.PI);
+		});
+		builtin("e",    (Engine E) -> {
+			Stack.add(Math.E);
+		});
+		builtin("cos",    (Engine E) -> {
+			Number a = (Number) Stack.pop();
+			Stack.add(Math.cos(a.doubleValue()));
+		});
+		builtin("sin",    (Engine E) -> {
+			Number a = (Number) Stack.pop();
+			Stack.add(Math.cos(a.doubleValue()));
+		});
+		builtin("tan",    (Engine E) -> {
+			Number a = (Number) Stack.pop();
+			Stack.add(Math.cos(a.doubleValue()));
+		});
+		builtin("log",    (Engine E) -> {
+			Number a = (Number) Stack.pop();
+			Stack.add(Math.log(a.doubleValue()));
+		});
+		builtin("floor",    (Engine E) -> {
+			Number a = (Number) Stack.pop();
+			Stack.add(Math.floor(a.doubleValue()));
 		});
 	}
 
@@ -147,5 +197,10 @@ public class Engine {
 		while (m.find()) 
 			Words.add(m.group(1));
 		// fix strign thing
+	}
+
+	public String readLine() throws IOException {
+			Scanner s = new Scanner(System.in);
+			return s.nextLine();
 	}
 }
