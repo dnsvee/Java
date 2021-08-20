@@ -1,4 +1,3 @@
-package RosettaCode;
 import java.util.Scanner;
 import java.io.*;
 import java.util.Set;
@@ -27,5 +26,9 @@ public class CountWords {
 		}
 
 		System.out.printf("Unique words in 'Les Miserables is %d\n", uq.size());
+	}
+
+	public static void main(String[] args) {
+		new CountWords();
 	}
 };

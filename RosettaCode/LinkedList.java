@@ -28,6 +28,9 @@ public class LinkedList<E extends Object> {
 
 		ll.push("1", "2", "3", "4", "5");
 		ll.map((e) -> e += "!");
+		ll.check("[1!, 2!, 3!, 4!, 5!]", 5);
+
+		// add lots of randoms
 		ll.forEach((e) -> System.out.printf("%s\n", e));
 		ll.clear();
 
@@ -43,16 +46,6 @@ public class LinkedList<E extends Object> {
 		ll.check("[]", 0);
 
 		System.out.println("all tests passed");
-	}
-
-	// default constructor
-	public LinkedList() {
-	}
-
-	// compares the string rep. of the LinkedList against the provided string s
-	void check(String s, int i) {
-		if (!toString().equals(s))
-			throw new RuntimeException(String.format("assert fail: %s != %s or %d != %d\n", toString(), s, i, length()));
 	}
 
 	// internal node impl.
@@ -76,12 +69,16 @@ public class LinkedList<E extends Object> {
 	// length of list
 	private int len  = 0;
 
+	// default constructor
+	public LinkedList() {
+	}
+
 	// returns length
 	public int length() {
 		return len;
 	}
 
-	// add first elem. to list
+	// add first element to list; private use
 	public void init(E e) {
 		len  = 1;
 		head = new Node(e);
@@ -90,19 +87,20 @@ public class LinkedList<E extends Object> {
 
 	// add multiple leems to lsit
 	public void push(E... es) {
-		for (E e : es) push(e);
+		for (E e : es) 
+			push(e);
 	}
 
-	// calls function on each elem.
-	public void forEach(Consumer<E> c) {
+	// calls function 'f' on each element
+	public void forEach(Consumer<E> f) {
 		Node cur = head;
 		for(int i = 0; i < len; i++) {
-			c.accept(cur.elem);
+			f.accept(cur.elem);
 			cur = cur.next;
 		}
 	}
 
-	// calls function on each elem and updates value with result of function
+	// calls function on each element and updates value with returned value of function 'f'
 	public void map(Function<E, E> f) {
 		Node cur = head;
 		for(int i = 0; i < len; i++) {
@@ -121,33 +119,38 @@ public class LinkedList<E extends Object> {
 		last.next      = new Node(e);
 		last.next.prev = last;
 		last           = last.next;
+
 		len++;
 	}
 
 	// remove from end and return
 	public E pop() {
-		if (len == 0) return null;
+		if (len == 0) 
+			return null;
 
 		Node l = last;
 		last   = last.prev;
+
 		if (last != null) 
 			last.next = null;
 		else
 			head = null;
 
 		len--;
+
 		return l.elem;
 	}
 
 	// remove element at index i
-	public void remove(int idx) {
-		if (idx >= len) throw new IllegalArgumentException();
+	public E remove(int idx) {
+		if (idx >= len) 
+			throw new IllegalArgumentException();
 
 		Node cur = head;
 		for(int i = 0; i < len; i++) {
 			if (idx != i) {
 				cur = cur.next;
-			       	continue;
+				continue;
 			}
 
 			if (cur.prev == null) 
@@ -162,11 +165,13 @@ public class LinkedList<E extends Object> {
 
 			len--;
 
-			break;
+			return cur.elem;
 		}
+
+		return null;
 	}
 
-	// insert at begin
+	// insert at head
 	public void unshift(E e) {
 		if (len == 0) {
 			init(e);
@@ -176,17 +181,20 @@ public class LinkedList<E extends Object> {
 		head.prev      = new Node(e);
 		head.prev.next = head;
 		head           = head.prev;
+
 		len++;
 	}
 
-	// insert multiple values at beginning
+	// insert multiple values at head
 	public void unshift(E... es) {
-		for (E e : es) unshift(e);
+		for (E e : es) 
+			unshift(e);
 	}
 
-	// removes and returns from the beginning
-	public Node shift(E e) {
-		if (len == 0) return null;
+	// remove and return from head
+	public E shift(E e) {
+		if (len == 0) 
+			return null;
 
 		Node n = head;
 		head = head.next;
@@ -196,31 +204,40 @@ public class LinkedList<E extends Object> {
 		else
 			last = null;
 
-		return n;
+		return n.elem;
 	}
 
 	// remove all nodes
 	public void clear() {
-		while (length() != 0) pop();
+		while (pop() != null);
 	}
 
-	// string repr. calls toString on each elem. and result == [elem1, elem2, elem3, ...]
-	// eg. [1,2,3] or []
+	// string represention of list; calls toString on each element
+	// result looks like [1, 2, 3, 4, 5]
 	public String toString() {
-		StringBuilder sb = new StringBuilder("");
+		StringBuilder sb = new StringBuilder("[");
+
 		Node cur = head;
-		sb.append("[");
+
 		for(int i = 0; i < len; i++) {
-			if (i > 0) sb.append(", ");
 			sb.append(String.format("%s", cur.elem.toString()));
+
+			if (i < len - 1) 
+				sb.append(", ");
+
 			cur = cur.next;
 		}
 		sb.append("]");
+
 		return sb.toString();
 	}
 
-	// print to stdout
-	void print() {
-		System.out.println(toString());
+	// compares the string rep. of the LinkedList against the provided string s and checks if size i equal to i
+	void check(String s, int i) {
+		if (len != i) 
+			throw new RuntimeException(String.format("assert fail: expected size == %s; found size == %s", i, len));
+
+		if (toString().equals(s) == false)
+			throw new RuntimeException(String.format("assert fail: %s != %s", toString(), s));
 	}
 };

@@ -1,4 +1,3 @@
-package RosettaCode;
 import java.util.Scanner;
 
 public class AplusB {
@@ -10,4 +9,8 @@ public class AplusB {
 		int b = s.nextInt();
 		System.out.printf("%d", a + b);
 	}
-};
+
+	public static void main(String[] args) {
+		AplusB ab = new AplusB();
+	}
+}

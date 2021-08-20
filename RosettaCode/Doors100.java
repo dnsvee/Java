@@ -1,5 +1,3 @@
-package RosettaCode;
-
 // implemnets RosettaCode task 100 doors
 
 public class Doors100 {
@@ -18,5 +16,9 @@ public class Doors100 {
 		for(int i = 1; i <= 100; i++) {
 			System.out.printf("%d : %b\n", i, doors[i]);
 		}
+	}
+
+	public static void main(String[] args) {
+		new Doors100();
 	}
 }
