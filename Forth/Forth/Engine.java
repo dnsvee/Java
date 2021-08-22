@@ -298,7 +298,6 @@ public class Engine {
 	// hello\ world
 	// input\sbuffer
 	// Hi!\n
-	//
 	public void preparse() {
 		for(String s : ((String) Stack.pop()).split("(?<!\\\\)\\s")) {
 			s = s.replace("\\ ", " ");
