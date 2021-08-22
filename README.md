@@ -2,6 +2,6 @@
 
 Some projects in Java.
 
-+ A forth interpreter
++ A Forth interpreter
 + A Treap implementation
 + Some tasks from RosettaCode
