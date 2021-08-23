@@ -243,6 +243,7 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 	// clear the treap of all nodes
 	public void clear() {
 		root = null;
+		sz   = 0;
 	}
 
 	public int hashCode() {
