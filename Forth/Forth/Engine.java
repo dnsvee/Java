@@ -22,7 +22,8 @@ public class Engine {
 	public int                 IP;
 
 	// used for returning from called word
-	public int[]               Trail  = new int[128];
+	public int[]               Trail   = new int[128];
+	public int                 iTrail  = -1;
 
 	// util. stack
 	public Stack<Object>       Stuff;
@@ -46,6 +47,10 @@ public class Engine {
 		// add builtins
 		// TOS == top of stack
 		// words alwyas cast optimistically towards the type it expects; if casting fails will throw an exception that cant be caught
+		//
+		Dict.push((Consumer<Engine>) (Engine e) -> {
+			throw new RuntimeException();
+		});
 
 		// displays TOS as string
 		builtin("puts", (Engine E) -> System.out.println(Stack.pop()));
@@ -168,20 +173,22 @@ public class Engine {
 			Stack.add(Math.tan(a.doubleValue()));
 		});
 
-		// a log == log(a)
+		// log of number
+		// ex.: 100 log
 		builtin("log",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.log(a.doubleValue()));
 		});
 
-		// a floor == floor(a)
+		// floor of number
+		// 3.4 floor
 		builtin("floor",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.floor(a.doubleValue()));
 		});
 
-		// formats stack elements as a string
-		// format_string count_of_objects_to_use; eg 12 34 2 %8d%d fmt
+		// formats stack elements as a string; first value is format string; second value is count of objects to format
+		// 42 hello 2 %d:%s fmt
 		builtin("fmt",    (Engine E) -> {
 			String a = (String) Stack.pop();
 			Number b = (Number) Stack.pop();
@@ -190,9 +197,49 @@ public class Engine {
 			Object[] o = Stack.subList(Stack.size() - i, Stack.size()).toArray();
 			Stack.add(String.format(a, o));
 		});
+
+		// displays debug information
+		macro("!!", (Engine E) -> {
+			System.out.printf("Dict.size() == %d\n", E.Dict.size());
+		});
+
+		// sets named variable with value from stack
+		// ex.: 11 ! number
+		macro("!", (Engine E) -> {
+			int i = find(E.Words.pop());
+
+			if (i == -1)
+				throw new RuntimeException("!: var not found");
+
+			Dict.push((Consumer<Engine>) (Engine E0) -> {
+				E0.Dict.set(i + 3, E0.Stack.pop());
+			});
+		});
+
+		// creates variable and initialize it with number from top of stack
+		// 42 var meaning
+		macro("var", (Engine E) -> {
+			Dict.push((Consumer<Engine>) (Engine e) -> {
+				IP = IP + 4;
+			});
+
+			int n = E.Dict.size();
+			Dict.add(E.Words.pop());
+			Dict.add(3);   // var
+			Dict.add(E.top);
+			int v = Dict.size();
+			Dict.add(99);
+			E.top = n;
+
+			Dict.push((Consumer<Engine>) (Engine E0) -> {
+				E0.Dict.set(v, E0.Stack.pop());
+				//E0.Dict.set(v, E0.Stack.pop());
+			});
+		});
 	}
 
 	// compile a builtin word
+	// fix: add help string
 	public void compile(String s, Consumer<Engine> c, int type) {
 		Dict.add(s);
 		Dict.add(type);   // builtin
@@ -234,6 +281,7 @@ public class Engine {
 	public void eval() {
 		preparse();
 
+		Trail[++iTrail] = 0;
 		// start executing here
 		int start = Dict.size();
 
@@ -245,38 +293,57 @@ public class Engine {
 				// compile word found
 				if ((Integer) Dict.get(loc + 1) == 1) {
 					Dict.push(Dict.get(loc + 3));
-				continue;
-				} else {
+					continue;
+				}
+
+				// macro
+				if ((Integer) Dict.get(loc + 1) == 2) {
+					((Consumer<Engine>) Dict.get(loc + 3)).accept(this);
+					continue;
+				}
+
+				if ((Integer) Dict.get(loc + 1) == 3) {
+					Stack.push(Dict.get(loc + 3));
+					continue;
 				}
 			}
 			// if macro goto run loop
 
+			try {
+				// try to parse as integer
+				Integer i = Integer.parseInt(s);
+				makeLiteral(i);
+			} catch (NumberFormatException err) {
 				try {
-					// try to parse as integer
-					Integer i = Integer.parseInt(s);
-					makeLiteral(i);
-				} catch (NumberFormatException err) {
-					try {
-						// try to parse as float
-						Float f = Float.parseFloat(s);
-						makeLiteral(f);
-					} catch (NumberFormatException err2) {
-						// puts string in dict as literal
-						makeLiteral(s);
-					}
+					// try to parse as float
+					Float f = Float.parseFloat(s);
+					makeLiteral(f);
+				} catch (NumberFormatException err2) {
+					// puts string in dict as literal
+					makeLiteral(s);
 				}
-
-
+			}
 		}
 
 		// last word compiled will throw an excpetion to break from the run loop
-		Consumer<Engine> c = (Engine e) -> {
-			throw new RuntimeException();
-		};
-		Dict.push(c);
+		//Dict.push((Consumer<Engine>) (Engine e) -> {
+//			throw new RuntimeException();
+//		});
+		leave();
 
 		// execute from the place where compiling started and run until exception thrown
 		IP = start;
+		run();
+	}
+
+	public void leave() {
+		Dict.push((Consumer<Engine>) (Engine E) -> {
+			IP = Trail[iTrail--] - 1;
+		});
+	}
+
+	// run loop
+	public void run() {
 		while (true) {
 			((Consumer<Engine>) Dict.get(IP)).accept(this);
 			IP++;
