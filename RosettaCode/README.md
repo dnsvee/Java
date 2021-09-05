@@ -1,3 +1,3 @@
 # Tasks from RosettaCode
 
-Implemenents some tasks from the Rosetta Code site.
+Implements some tasks from the Rosetta Code site.
