@@ -7,16 +7,19 @@ import java.util.*;
 import java.util.function.*;
 import java.lang.*;
 
+// this provides a readline for the Forth engine
 public class ForthTest {
 	public static void main(String arg[]) {
 		Engine E = new Engine();
 
-
 		PrintStream p = System.out;
 
+		/*
 		File f = new File("init.fth");
 
 		String toread;
+
+		// try to read
 		try {
 			List<String> strs;
 			strs = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
@@ -30,11 +33,11 @@ public class ForthTest {
 			p.printf("IOException caught.\n");
 			toread = "";
 		}
-
-		//E.Stack.add("say 123 def puts puts");
+		*/
 
 		try {
 			while (true) {
+				// loop while input
 				System.out.printf(">>> ");
 				String s = E.readLine();
 				if (s.length() == 0) 
@@ -45,6 +48,8 @@ public class ForthTest {
 					E.Stack.add(s);
 					E.eval();
 				} catch (RuntimeException exp) {
+
+					// displays a status ;ine
 					System.out.printf("[%2d|%+2d]", E.Stack.size(), E.Stack.size() - sz);
 					for(int i = 0; i < Math.min(E.Stack.size(), 3); i++) {
 						System.out.printf("(");
