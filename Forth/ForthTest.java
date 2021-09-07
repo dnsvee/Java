@@ -14,54 +14,56 @@ public class ForthTest {
 
 		PrintStream p = System.out;
 
-		/*
-		File f = new File("init.fth");
+		if (arg.length == 1) {
+			File f = new File(arg[0]);
 
-		String toread;
+			String toread;
 
 		// try to read
-		try {
 			List<String> strs;
-			strs = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
+			try {
+				strs = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
+			} catch (IOException exp) {
+				throw new RuntimeException("Exception!");
+			}
+
 			StringBuilder sb = new StringBuilder();
+
 			while (strs.size() > 0) {
 				sb.append(strs.remove(0));
 				sb.append("\n");
 			}
-			toread = sb.toString();
-		} catch (IOException e) {
-			p.printf("IOException caught.\n");
-			toread = "";
+
+			E.Stack.add(sb.toString());
+			E.eval();
+
+			return;
 		}
-		*/
 
 		try {
+			int sz = 0;
 			while (true) {
 				// loop while input
-				System.out.printf(">>> ");
+				System.out.printf("%3d/%+3d: ", E.Stack.size(), E.Stack.size() - sz);
 				String s = E.readLine();
+
+				// no input so done reading
 				if (s.length() == 0) 
 					break;
 
-				int sz = E.Stack.size();
+				sz = E.Stack.size();
+
 				try {
+					/// put read string on stack and call eval on the Forth engine
 					E.Stack.add(s);
 					E.eval();
 				} catch (RuntimeException exp) {
-
-					// displays a status ;ine
-					System.out.printf("[%2d|%+2d]", E.Stack.size(), E.Stack.size() - sz);
-					for(int i = 0; i < Math.min(E.Stack.size(), 3); i++) {
-						System.out.printf("(");
-						System.out.printf("%12s", E.Stack.get(E.Stack.size() - 1 - i));
-						System.out.printf(")");
-						if (i == Math.min(E.Stack.size(), 3) - 1) 
-							System.out.printf("\n");
-					}
+					// displays a status line
+					// outpu size of stack and change since last evaluation
 				}
 			}
 		} catch (IOException exp) {
-			System.out.println("Erro");
+			System.out.println("Exception");
 		}
 
 
