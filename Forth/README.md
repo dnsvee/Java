@@ -1,71 +1,81 @@
 # Forth interpreter
 
-Attempt to create a Forth interpreter in Java. Works a little bit right now. Lots of functionality still missing.
+Attempt to create a Forth interpreter in Java. Some things work. Lots of functionality still missing.
 
-Forth is a programming language with very little syntax and simple semantics. 
+Forth is a programming language with very little syntax and simple semantics. Where other languages have functions or methods Forth has words. Parameters are passed to words and values are returned from words by placing them on a globally available stack. Words (right now) don't have a local enviroment for local variables.
 
-When running the ForthTest.class file you will see a command prompt like
->>>
-
-Forth commands look like this:
-1 2 + puts
-
-This means 1 and 2 are put on a globally available stack. First the command '+' is run which pops both numbers from the stack and adds them together. The 'puts' command pops the result from the stack and displays it.
-
-## Some commands and control structures
-
-TOS means top-of-stack.
-
-Adding two numbers
+A Forth command looks like this:
 1 2 +
-3
 
-Substracting two numbers
-1 2 -
--1
+This first puts the two numbers on the stack and then it runs the '+' command; it will pop the values from the stack, add them together and then it will place the return value on the stack. 
 
-Multiplying two numbers
-2 3 **
-8
+A stack output can be displayed with 'puts'. The 'nl' command displays a newline.
 
-Dividing two numbers
-8 2 /
-4
+So '1 2 + puts nl' will output 3 and a newline
 
-Displaying the TOS
-16 puts
-16
+Comparing numbers is done with the the commands '< > <= >= ==':
+3 2 >
+5 6 <
 
-Comparing numbers:
-1 2 <
-true
+This will cosume both numbers and place a boolean on the stack. 
 
-1 2 >
-false
+Every object can be compared with every other object according Java's in 'equals' semantics.
 
-PI cos
-1
+## Strings
 
-10 log
-2.30258.....
+If Forth does not recognize a word it will consider it a string that is put on the stack as is. Prefacing a word with " will treat the word as a string. Strings can have embedded spaces in them prefaced with a backslash and it su[[orts the \s and \n escape sequence.
+
+These are all valid strings
+
+Hello 
+" Hello 
+Hello\ world!
+Line\sone\nLine\stwo\n
+
+## Stack ordering
+
+Objects on the stack can be rearranged if necessary. Here is an overview:
+
+'dup'  create's a copy of the TOS 
+'swap' swaps the two to objects with each other
+'drop' drops the top object
+'nip'  drops the object below the TOS
+'over' duplicates the object under the TOS
+
+There is also a second stack with the operators:
+
+'twirl' swaps top of first and second stack
+'raise' moves from main to second stack
+'lower' moves from second stack to main
+
+## Lambdas
+
+A lambda groups statement in a single block and you can call the block using 'call':
+
+[ something ] call
+
+Lambdas on the stack are represented with numbers and placed by default on the second stack.
+
+## Conditional
+
+The if/then/else construct found in other languages is implemented as follows. 
+
+boolean [ called when true ] [ called when false ] test 
+
+'test' consumes the boolean on the top of the stack and if it is true it will call the first lambda otherwise it will call the second one.
+
+## Looping
+
+The while or fo rloop construct found in other languages is implemented as follows:
+
+[ condition ] [ loop body ] while
+
+The 'while' word fill first call the 'condiiton' lambda and it expects a boolean to be the TOS. If it is true it will call the second lambda once. When the boolean is false if will stop.
 
 ## Constants
 
 true, false, e, PI
 
-## Strings
-
-If Forth does not recognize a word it will consider it a string that is put on the stack as is.
-
-The following will put the string hello\ world on the stack and print it to standard outpu
-
-hello\ world puts
-
-## Condition 
-
-This control struct will display smaller since 1 is smaller than 2.
-
-1 2 < if smaller else larger then puts
 
 
 
