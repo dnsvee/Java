@@ -16,6 +16,9 @@ public class Engine {
 	// running stack
 	public Stack<Object>       Stack;
 
+	// second stack
+	public Stack<Object>       Second;
+
 	// all compiled words and literals and builtins
 	public Stack<Object>       Dict;
 
@@ -39,6 +42,7 @@ public class Engine {
 	public Engine() {
 		Dict  = new Stack();
 		Stack = new Stack();
+		Second= new Stack();
 		Stuff = new Stack();
 		Words = new ArrayDeque<String>();
 		IP    = 0;
@@ -47,20 +51,38 @@ public class Engine {
 
 		// TOS == top of stack
 		//
-		//
 		// this word is run when input buffer is empty and no more instructions 
 		Dict.push((Consumer<Engine>) (Engine e) -> {
 			throw new RuntimeException();
 		});
 
 		// displays TOS as string
-		builtin("puts", (Engine E) -> System.out.println(Stack.pop()));
+		builtin("puts", (Engine E) -> { 
+			System.out.printf("%s", Stack.pop());
+			IP++;
+		});
+
+		macro("\"", (Engine E) -> { 
+			literal(Words.pop());
+		});
+
+		// display a newline
+		builtin("nl", (Engine E) -> { 
+			System.out.println();
+			IP++;
+		});
+
+		// displays a space
+		builtin("space", (Engine E) -> { 
+			System.out.printf(" ");
+			IP++;
+		});
 
 		// true constant
 		constant("true",  true);
 		constant("false", false);
-		constant("PI", Math.PI);
-		constant("e", Math.E);
+		constant("PI",    Math.PI);
+		constant("e",     Math.E);
 
 		// add two numbers
 		// a b + => <a + b>
@@ -68,6 +90,7 @@ public class Engine {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
 			Stack.add(a.doubleValue() + b.doubleValue());
+			IP++;
 		});
 
 		// a b  - => <a - b>
@@ -75,6 +98,7 @@ public class Engine {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
 			Stack.add(a.doubleValue() - b.doubleValue());
+			IP++;
 		});
 
 		// a b * => <a * b>
@@ -82,6 +106,7 @@ public class Engine {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
 			Stack.add(a.doubleValue() * b.doubleValue());
+			IP++;
 		});
 
 		// a b / => <a / b>
@@ -89,6 +114,7 @@ public class Engine {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
 			Stack.add(a.doubleValue() / b.doubleValue());
+			IP++;
 		});
 
 		// a b max => <max(a, b)>
@@ -96,6 +122,7 @@ public class Engine {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.max(a.doubleValue(), b.doubleValue()));
+			IP++;
 		});
 
 		// a b min => <min(a, b)>
@@ -103,6 +130,7 @@ public class Engine {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.min(a.doubleValue(), b.doubleValue()));
+			IP++;
 		});
 
 		// a b ** => <pow(a, b)>
@@ -110,6 +138,7 @@ public class Engine {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.pow(a.doubleValue(), b.doubleValue()));
+			IP++;
 		});
 
 		// works only on numbers
@@ -118,6 +147,7 @@ public class Engine {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
 			Stack.add(a.doubleValue() > b.doubleValue());
+			IP++;
 		});
 
 		// works only on numbers
@@ -126,6 +156,7 @@ public class Engine {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
 			Stack.add(a.doubleValue() < b.doubleValue());
+			IP++;
 		});
 
 		// a b cmp => <a.compareTo(b)>
@@ -134,6 +165,7 @@ public class Engine {
 			Comparable b = (Comparable) Stack.pop();
 			Comparable a = (Comparable) Stack.pop();
 			Stack.add(a.compareTo(b));
+			IP++;
 		});
 
 		// a b == => <a.equals(b)>
@@ -142,48 +174,56 @@ public class Engine {
 			Object b = Stack.pop();
 			Object a = Stack.pop();
 			Stack.add(a.equals(b));
+			IP++;
 		});
 
 		// a sqrt => <sqrt(a)>
 		builtin("sqrt",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.sqrt(a.doubleValue()));
+			IP++;
 		});
 
 		// a abs => <abs(a)>
 		builtin("abs",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.abs(a.doubleValue()));
+			IP++;
 		});
 
 		// a cos => <cos(a)>
 		builtin("cos",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.cos(a.doubleValue()));
+			IP++;
 		});
 
 		// a sin => <sin(a)>
 		builtin("sin",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.sin(a.doubleValue()));
+			IP++;
 		});
 
 		// a tan => <tan(a)>
 		builtin("tan",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.tan(a.doubleValue()));
+			IP++;
 		});
 
 		// a log => <log(a)>
 		builtin("log",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.log(a.doubleValue()));
+			IP++;
 		});
 
 		// a floor => <floor(a)>
 		builtin("floor",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.floor(a.doubleValue()));
+			IP++;
 		});
 
 		// formats stack elements as a string
@@ -196,11 +236,7 @@ public class Engine {
 
 			Object[] o = Stack.subList(Stack.size() - i, Stack.size()).toArray();
 			Stack.add(String.format(a, o));
-		});
-
-		// displays debug information
-		macro("!!", (Engine E) -> {
-			System.out.printf("Dict.size() == %d\n", E.Dict.size());
+			IP++;
 		});
 
 		// sets named variable with value from stack
@@ -213,6 +249,7 @@ public class Engine {
 
 			Dict.push((Consumer<Engine>) (Engine E0) -> {
 				E0.Dict.set(i + 3, E0.Stack.pop());
+				IP++;
 			});
 		});
 
@@ -220,7 +257,7 @@ public class Engine {
 		// example: 42 var meaning
 		macro("var", (Engine E) -> {
 			Dict.push((Consumer<Engine>) (Engine e) -> {
-				IP = IP + 4;
+				IP = IP + 5;
 			});
 
 			int n = E.Dict.size();
@@ -228,72 +265,79 @@ public class Engine {
 			Dict.add(3);   // variable location
 			Dict.add(E.top);
 			int v = Dict.size();
-			Dict.add(99);
+			Dict.add(null);
 			E.top = n;
 
 			Dict.push((Consumer<Engine>) (Engine E0) -> {
 				E0.Dict.set(v, E0.Stack.pop());
+				IP++;
 			});
 		});
 
-		// if else then
-		// if consumes boolean
-		macro("if", (Engine E) -> {
-			Dict.push((Consumer<Engine>) (Engine E0) -> {
-				Boolean b = (Boolean) Stack.pop();
-				if (b) 
-					IP += 1;
-			});
-			Stuff.add(Dict.size());
-			Dict.add(null);
+		// support for lambas
+		// all commands between [ and ] are part of a callable function that can
+		// be called with call so [ 1 2 + ] call will put 3 on the stack
+		// the lambda address will be pu ton the second stack and popped when call is called
+		macro("[", (Engine E) -> {
+			Stuff.push(Dict.size());
+			Dict.push(null);
 		});
 
-		macro("else", (Engine E) -> {
-			int i = (Integer) Stuff.pop();
-			Stuff.add(Dict.size()); 
-			Dict.add(null);
-
-			int sz = Dict.size();
-			Dict.set(i, (Consumer<Engine>) (Engine E1) -> {
-				IP = sz - 1;
+		macro("]", (Engine E) -> {
+			leave();
+			int i = Dict.size();
+			int j = (Integer) Stuff.pop();
+			Dict.set(j, (Consumer<Engine>) (Engine e) -> {
+				IP = i;
 			});
-		});
-
-		macro("then", (Engine E) -> {
-			int sz = Dict.size();
-			Dict.set((Integer) Stuff.pop(), (Consumer<Engine>) (Engine E1) -> {
-				IP = sz - 1;
+			Dict.push((Consumer<Engine>) (Engine) -> {
+				Second.push(j + 1);
+				IP++;
 			});
 		});
 
-		// do while loop 
-		// while consumes a boolean
-		// do <run on each iteration> while <runs when condition true> loop
-		macro("do", (Engine E) -> {
-			Stuff.add(Dict.size()); 
+		// calls a lambda
+		builtin("call", (Engine E) -> {
+			Trail[++iTrail] = IP + 1;
+			IP = (Integer) Second.pop();
 		});
 
+		// loops while a condition is held
+		// [ ... ] [ ... ] while
+		// the first lambda is called provides the boolean that when true
+		// call the second lambda
 		macro("while", (Engine E) -> {
-			Dict.push((Consumer<Engine>) (Engine E0) -> {
-				if ((Boolean) Stack.pop()) 
-					IP += 1;
+			Dict.push((Consumer<Engine>) (Engine) -> {
+				Trail[++iTrail] = IP + 1;
+				IP = (Integer) Second.get(Second.size() - 2);
 			});
-			Stuff.add(Dict.size()); 
-			Dict.add(null); 
+
+			Dict.push((Consumer<Engine>) (Engine) -> {
+				if ((Boolean) Stack.pop()) {
+					Trail[++iTrail] = IP - 1;
+					IP = (Integer) Second.get(Second.size() - 1);
+				} else {
+					Second.pop();
+					Second.pop();
+					IP++;
+				}
+			});
 		});
 
-		macro("loop", (Engine E) -> {
-			int sz = Dict.size();
+		// the if then else control struct
+		// [ ... ] [ ...] test
+		// consume the boolean on the top of the stack and calls the first it is
+		// true; otherwise it calls the second
+		builtin("test", (Engine E) -> {
+			Object f = Second.pop();
+			Object t = Second.pop();
 
-			Dict.set((Integer) Stuff.pop(), (Consumer<Engine>) (Engine E1) -> {
-				IP = sz;
-			});
+			Trail[++iTrail] = IP + 1;
 
-			Integer i = (Integer) Stuff.pop();
-
-			Dict.push((Consumer<Engine>) (Engine E0) -> {
-				IP = i - 1;
-			});
+			if ((Boolean) Stack.pop()) 
+				IP = (Integer) t;
+			else
+				IP = (Integer) f;
 		});
 
 		// displays all known words
@@ -303,26 +347,51 @@ public class Engine {
 				System.out.println((String) Dict.get(cur));
 				cur = (int) Dict.get(cur + 2);
 			}
+			IP++;
 		});
 
 		// duplicates TOS element
 		builtin("dup",    (Engine E) -> {
 			Stack.push(Stack.peek());
+			IP++;
 		});
 
 		// duplicates element under TOS
 		builtin("over",    (Engine E) -> {
 			Stack.push(Stack.get(Stack.size() - 2));
+			IP++;
 		});
 
 		// drop element TOS
 		builtin("drop",    (Engine E) -> {
 			Stack.pop();
+			IP++;
 		});
 
 		// remove element under TOS
 		builtin("nip",    (Engine E) -> {
 			Stack.remove(Stack.size() - 2);
+			IP++;
+		});
+
+		// move to second stack
+		builtin("raise",    (Engine E) -> {
+			Second.push(Stack.pop());
+			IP++;
+		});
+
+		// bring back from second stack
+		builtin("lower",    (Engine E) -> {
+			Stack.push(Second.pop());
+			IP++;
+		});
+
+		// rotate top of both stacks
+		builtin("twirl",    (Engine) -> {
+			Object o = Stack.pop();
+			Stack.push(Second.pop());
+			Second.push(o);
+			IP++;
 		});
 
 		// swap top two elements
@@ -331,7 +400,9 @@ public class Engine {
 			Object b = Stack.pop();
 			Stack.push(a);
 			Stack.push(b);
+			IP++;
 		});
+
 	}
 
 	// compile a builtin word
@@ -344,12 +415,21 @@ public class Engine {
 		top = Dict.size() - 4;
 	}
 
+	// compile a literal word unto the dictionary
+	public void literal(Object o) {
+		Dict.push((Consumer<Engine>) (Engine) -> {
+			Stack.push(o);
+			IP++;
+		});
+	}
+
 	// compiles a constant with name n and value val
 	public void constant(String n, Object val) {
-		macro(n, (Engine E) -> {
-			makeLiteral(val);
+		macro(n, (Engine) -> {
+			literal(val);
 		});
 	};
+
 
 	// compile a builtin word
 	public void builtin(String s, Consumer<Engine> c) {
@@ -374,11 +454,6 @@ public class Engine {
 		return -1;
 	}
 
-	// compile a literal word unto the dictionary
-	public void makeLiteral(Object o) {
-		Consumer<Engine> c = (Engine) -> Stack.push(o);
-		Dict.push(c);
-	}
 
 	// compile all words and then run the program
 	public void eval() {
@@ -394,19 +469,20 @@ public class Engine {
 			int loc  = find(s);
 			if (loc >= 0) {
 				// word found; compile
-				if ((Integer) Dict.get(loc + 1) == 1) {
+				Integer t = (Integer) Dict.get(loc + 1);
+				if (t == 1) {
 					Dict.push(Dict.get(loc + 3));
 					continue;
 				}
 
 				// word found: run
-				if ((Integer) Dict.get(loc + 1) == 2) {
+				if (t == 2) {
 					((Consumer<Engine>) Dict.get(loc + 3)).accept(this);
 					continue;
 				}
 
 				// var found: put value on stack
-				if ((Integer) Dict.get(loc + 1) == 3) {
+				if (t == 3) {
 					Stack.push(Dict.get(loc + 3));
 					continue;
 				}
@@ -416,18 +492,18 @@ public class Engine {
 			try {
 				// try to parse as integer
 				Integer i = Integer.parseInt(s);
-				makeLiteral(i);
+				literal(i);
 				continue;
 			} catch (NumberFormatException err) {}
 
 			try {
 				// try to parse as float
 				Float f = Float.parseFloat(s);
-				makeLiteral(f);
+				literal(f);
 				continue;
 			} catch (NumberFormatException err2) {}
 			
-			makeLiteral(s);
+			literal(s);
 		}
 
 		leave();
@@ -440,16 +516,14 @@ public class Engine {
 	// compiles a leave instruction
 	public void leave() {
 		Dict.push((Consumer<Engine>) (Engine E) -> {
-			IP = Trail[iTrail--] - 1;
+			IP = Trail[iTrail--];
 		});
 	}
 
 	// run main loop
 	public void run() {
-		while (true) {
+		while (true) 
 			((Consumer<Engine>) Dict.get(IP)).accept(this);
-			IP++;
-		}
 	}
 
 	// shifts word from input buffer and puts it on the stack
