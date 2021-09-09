@@ -10,7 +10,7 @@ import java.util.function.*;
 import java.util.Formatter.*;
 import java.util.regex.*;
 import java.lang.Math;
-
+import java.util.AbstractMap.SimpleEntry;
 
 public class Engine {
 	// running stack
@@ -40,6 +40,7 @@ public class Engine {
 
 	// constructor
 	public Engine() {
+		SimpleEntry<Integer, String> entry = new SimpleEntry<>(1, "abc");
 		Dict  = new Stack();
 		Stack = new Stack();
 		Second= new Stack();
@@ -58,7 +59,13 @@ public class Engine {
 
 		// displays TOS as string
 		builtin("puts", (Engine E) -> { 
-			System.out.printf("%s", Stack.pop());
+			System.out.printf("%s\n", Stack.pop());
+			IP++;
+		});
+
+		// displays TOS as string
+		builtin("class?", (Engine E) -> { 
+			Stack.push(Stack.pop().getClass());
 			IP++;
 		});
 
@@ -247,8 +254,8 @@ public class Engine {
 			if (i == -1)
 				throw new RuntimeException("!: var not found");
 
-			Dict.push((Consumer<Engine>) (Engine E0) -> {
-				E0.Dict.set(i + 3, E0.Stack.pop());
+			Dict.push((Consumer<Engine>) (Engine) -> {
+				Dict.set(i + 3, Stack.pop());
 				IP++;
 			});
 		});
@@ -260,12 +267,12 @@ public class Engine {
 				IP = IP + 5;
 			});
 
-			int n = E.Dict.size();
-			Dict.add(E.Words.pop());
-			Dict.add(3);   // variable location
+			int n = Dict.size();
+			Dict.add(Words.pop());
+			Dict.add(3);   // type 
 			Dict.add(E.top);
 			int v = Dict.size();
-			Dict.add(null);
+			Dict.add(999);
 			E.top = n;
 
 			Dict.push((Consumer<Engine>) (Engine E0) -> {
@@ -403,6 +410,33 @@ public class Engine {
 			IP++;
 		});
 
+		// map! 
+		builtin("map!",    (Engine E) -> {
+			Stack.push(new HashMap<Object, Object>());
+			IP++;
+		});
+
+		builtin("put",    (Engine) -> {
+			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+			Object k = Stack.pop();
+			Object v = Stack.pop();
+			o.put(k, v);
+			IP++;
+		});
+
+		builtin("get",    (Engine E) -> {
+			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+			Stack.push(o.get(Stack.pop()));
+			IP++;
+		});
+
+		builtin("del",    (Engine E) -> {
+			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+			o.remove(Stack.pop());
+			IP++;
+		});
+
+
 	}
 
 	// compile a builtin word
@@ -454,6 +488,12 @@ public class Engine {
 		return -1;
 	}
 
+	public void putvar(int l) {
+		Dict.push((Consumer<Engine>) (Engine) -> {
+			Stack.push(Dict.get(l + 3));
+			IP++;
+		});
+	}
 
 	// compile all words and then run the program
 	public void eval() {
@@ -483,7 +523,7 @@ public class Engine {
 
 				// var found: put value on stack
 				if (t == 3) {
-					Stack.push(Dict.get(loc + 3));
+					putvar(loc);
 					continue;
 				}
 			}
