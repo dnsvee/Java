@@ -58,6 +58,8 @@ public class ForthTest {
 					E.Stack.add(s);
 					E.eval();
 				} catch (RuntimeException exp) {
+					System.out.printf("Exception: %s\n", exp.toString());
+
 					// displays a status line
 					// outpu size of stack and change since last evaluation
 				}

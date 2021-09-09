@@ -436,7 +436,46 @@ public class Engine {
 			IP++;
 		});
 
+		class ListEnd {
+		}
 
+		// list data structure
+		//
+		// asks as a terminator for the list constuctor
+		macro("(",    (Engine E) -> {
+			literal(new ListEnd());
+		});
+
+		// list constructor
+		// pops values from stack and adds them to list until terminator is encountered
+		builtin(")",    (Engine E) -> {
+			ArrayDeque deq = new ArrayDeque();
+			Object o = Stack.pop();
+			while (!(o instanceof ListEnd)) {
+				deq.addFirst(o);
+				o = Stack.pop();
+			}
+			Stack.push(deq);
+			IP++;
+		});
+
+		// push to list
+		builtin("push",    (Engine E) -> {
+			((ArrayDeque) Stack.pop()).addLast(Stack.pop());
+			IP++;
+		});
+
+		// pop from list
+		builtin("pop",    (Engine E) -> {
+			Stack.push(((ArrayDeque) Stack.pop()).removeLast());
+			IP++;
+		});
+
+		// size of collection
+		builtin("size",    (Engine E) -> {
+			Stack.push(((Collection) Stack.pop()).size());
+			IP++;
+		});
 	}
 
 	// compile a builtin word
@@ -578,7 +617,7 @@ public class Engine {
 	// space is the used delimiter except when preceded by a backlash
 	// replace \s, \<space> and \n escape sequences
 	public void preparse() {
-		for(String s : ((String) Stack.pop()).split("(?<!\\\\)\\s")) {
+		for(String s : ((String) Stack.pop()).split("(?<!\\\\)\\s+")) {
 			s = s.replace("\\ ", " ");
 			s = s.replace("\\s", " ");
 			s = s.replace("\\n", " ");
