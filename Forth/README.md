@@ -23,7 +23,7 @@ Every object can be compared with every other object according Java's in 'equals
 
 ## Strings
 
-If Forth does not recognize a word it will consider it a string that is put on the stack as is. Prefacing a word with " will treat the word as a string. Strings can have embedded spaces in them prefaced with a backslash and it su[[orts the \s and \n escape sequence.
+If Forth does not recognize a word it will consider it a string that is put on the stack as is. Prefacing a word with " will treat the word as a string. Strings can have embedded spaces in them prefaced with a backslash and it supports the \s and \n escape sequence.
 
 These are all valid strings
 
@@ -66,11 +66,11 @@ boolean [ called when true ] [ called when false ] test
 
 ## Looping
 
-The while or fo rloop construct found in other languages is implemented as follows:
+The while or for loop construct found in other languages is implemented as follows:
 
 [ condition ] [ loop body ] while
 
-The 'while' word fill first call the 'condiiton' lambda and it expects a boolean to be the TOS. If it is true it will call the second lambda once. When the boolean is false if will stop.
+The 'while' word fill first call the 'condition' lambda and it expects a boolean to be the TOS. If it is true it will call the second lambda. When the boolean is false if will end looping and pop the lambdas from the second stack/
 
 ## Constants
 
