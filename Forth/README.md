@@ -76,6 +76,38 @@ The 'while' word fill first call the 'condiiton' lambda and it expects a boolean
 
 true, false, e, PI
 
+## Lists
+
+A list, implemented using ArrayDeque, is constructed like this:
+
+( elements... ) 
+
+Elements are added to the front like this:
+<element> <list> push
+
+Elements are removed from the front like this; the element is put on the stack:
+<list> pop
+
+The size of the list is queried like this:
+<list> size
+
+## Maps
+
+A map is a dictionary that maps keys to values. A map is created and like this:
+map!
+
+A key/value pair is added like this
+<value> <key> <map> put
+
+The value associated to the map is retrieved using key like this:
+<key> <map> get
+
+The size of the map is queried like this:
+<map> size
+
+
+
+
 
 
 
