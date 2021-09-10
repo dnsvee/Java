@@ -445,7 +445,8 @@ public class Engine {
 				o.remove( Stack.pop() );
 			} else { // just assume it's a list
 				ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
-				o.remove((Integer) Stack.pop() );
+				int i = (Integer) Stack.pop();
+				o.remove(i);
 			}
 			IP++;
 		});
