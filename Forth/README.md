@@ -53,11 +53,13 @@ puts	( a -- ) 	outputs top stack element as strign to stdout
 
 If Forth does not recognize a word it will consider it a string literal. The word " will treat the next word as a string literal. Strings can have embedded spaces in them prefaced with a backslash. Strings support the escape sequences \s and \n.
 
+```
 These are all valid strings:
 Hello 
 " Hello 
 Hello\ world!
 Line\sone\nLine\stwo\n
+```
 
 ## Stack ordering
 
