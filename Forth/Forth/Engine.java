@@ -90,6 +90,7 @@ public class Engine {
 		constant("false", false);
 		constant("PI",    Math.PI);
 		constant("e",     Math.E);
+		constant("null",  null);
 
 		// add two numbers
 		// a b + => <a + b>
@@ -416,23 +417,36 @@ public class Engine {
 			IP++;
 		});
 
-		builtin("put",    (Engine) -> {
-			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-			Object k = Stack.pop();
-			Object v = Stack.pop();
-			o.put(k, v);
+		builtin("get",    (Engine E) -> {
+			if (Stack.peek() instanceof HashMap) {
+				HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+				Stack.push(o.get(Stack.pop()));
+			} else { // just assume it's a list
+				ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
+				Stack.push(o.get((Integer) Stack.pop()));
+			}
 			IP++;
 		});
 
-		builtin("get",    (Engine E) -> {
-			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-			Stack.push(o.get(Stack.pop()));
+		builtin("set",    (Engine E) -> {
+			if (Stack.peek() instanceof HashMap) {
+				HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+				o.put( Stack.pop(), Stack.pop() );
+			} else { // just assume it's a list
+				ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
+				o.set((Integer) Stack.pop(), Stack.pop() );
+			}
 			IP++;
 		});
 
 		builtin("del",    (Engine E) -> {
-			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-			o.remove(Stack.pop());
+			if (Stack.peek() instanceof HashMap) {
+				HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+				o.remove( Stack.pop() );
+			} else { // just assume it's a list
+				ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
+				o.remove((Integer) Stack.pop() );
+			}
 			IP++;
 		});
 
@@ -449,13 +463,18 @@ public class Engine {
 		// list constructor
 		// pops values from stack and adds them to list until terminator is encountered
 		builtin(")",    (Engine E) -> {
-			ArrayDeque deq = new ArrayDeque();
+			ArrayList lst = new ArrayList();
 			Object o = Stack.pop();
 			while (!(o instanceof ListEnd)) {
-				deq.addFirst(o);
+				lst.add(o);
 				o = Stack.pop();
 			}
-			Stack.push(deq);
+			for(int i = 0; i < lst.size() / 2; i++) {
+				Object tmp = lst.get(i);
+				lst.set(i, lst.get(lst.size() - 1 - i));
+				lst.set(lst.size() - 1 - i, tmp);
+			}
+			Stack.push(lst);
 			IP++;
 		});
 
@@ -476,6 +495,7 @@ public class Engine {
 			Stack.push(((Collection) Stack.pop()).size());
 			IP++;
 		});
+
 	}
 
 	// compile a builtin word
