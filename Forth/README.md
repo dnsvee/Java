@@ -191,6 +191,7 @@ life puts
 word	stack notation	explanation
 var	( a -- )	creates a named variable and initializes it with a
 !	( a -- )	sets the variable named by value a
+<name>	( -- a )	puts value of variable <name> on stack as a:object
 ```
 
 
