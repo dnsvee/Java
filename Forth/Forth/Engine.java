@@ -59,11 +59,23 @@ public class Engine {
 
 		// displays TOS as string
 		builtin("puts", (Engine E) -> { 
-			System.out.printf("%s\n", Stack.pop());
+			System.out.printf("%s", Stack.pop());
 			IP++;
 		});
 
 		// displays TOS as string
+		builtin("putnl", (Engine E) -> { 
+			System.out.printf("%s\n", Stack.pop());
+			IP++;
+		});
+
+		// formats stack elements and outputs them to stdout
+		macro("putf", (Engine E) -> { 
+			compile("fmt");
+			compile("puts");
+		});
+
+		// ( a -- b ) b is name of class of a:object
 		builtin("class?", (Engine E) -> { 
 			Stack.push(Stack.pop().getClass());
 			IP++;
@@ -85,7 +97,7 @@ public class Engine {
 			IP++;
 		});
 
-		// true constant
+		// all constant
 		constant("true",  true);
 		constant("false", false);
 		constant("PI",    Math.PI);
@@ -235,15 +247,18 @@ public class Engine {
 		});
 
 		// formats stack elements as a string
-		// Objects... <nubmer of objects> <format string> fmt
+		// Objects... <number of objects> <format string> fmt
 		// example: 42 hello 2 %d:%s fmt
 		builtin("fmt",    (Engine E) -> {
 			String a = (String) Stack.pop();
 			Number b = (Number) Stack.pop();
-			int i = b.intValue();
+			int sz = b.intValue();
+			Object[] arr = Stack.subList(Stack.size() - sz, Stack.size()).toArray();
 
-			Object[] o = Stack.subList(Stack.size() - i, Stack.size()).toArray();
-			Stack.add(String.format(a, o));
+			for(int i = 0; i < sz; i++)
+				Stack.pop();
+
+			Stack.add(String.format(a, arr));
 			IP++;
 		});
 
@@ -417,6 +432,12 @@ public class Engine {
 			IP++;
 		});
 
+		// list constructor
+		builtin("list!",    (Engine E) -> {
+			Stack.push(new ArrayList<Object>());
+			IP++;
+		});
+
 		builtin("get",    (Engine E) -> {
 			if (Stack.peek() instanceof HashMap) {
 				HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
@@ -451,14 +472,27 @@ public class Engine {
 			IP++;
 		});
 
-		class ListEnd {
-		}
+		// ( a b -- a ) adds b:collection to a:collection
+		builtin("concat",    (Engine E) -> {
+			Collection c = (Collection) Stack.pop();
+			((Collection) Stack.peek()).addAll(c);
+		        IP++;	
+		});
+
+		// ( a -- ) clears a:collection
+		builtin("clear",    (Engine E) -> {
+			Collection c = (Collection) Stack.pop();
+			c.clear();
+		        IP++;	
+		});
+
+		class Marker {}
 
 		// list data structure
 		//
 		// asks as a terminator for the list constuctor
 		macro("(",    (Engine E) -> {
-			literal(new ListEnd());
+			literal(new Marker());
 		});
 
 		// list constructor
@@ -466,7 +500,7 @@ public class Engine {
 		builtin(")",    (Engine E) -> {
 			ArrayList lst = new ArrayList();
 			Object o = Stack.pop();
-			while (!(o instanceof ListEnd)) {
+			while (!(o instanceof Marker)) {
 				lst.add(o);
 				o = Stack.pop();
 			}
@@ -553,6 +587,15 @@ public class Engine {
 			Stack.push(Dict.get(l + 3));
 			IP++;
 		});
+	}
+
+
+	public void compile(String name) {
+		int loc  = find(name);
+		if (loc == -1)
+			throw new RuntimeException("Forth::compile(String name): loc == -1");
+
+		Dict.push(Dict.get(loc + 3));
 	}
 
 	// compile all words and then run the program
