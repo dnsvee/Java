@@ -116,7 +116,12 @@ The 'while' word will first call the 'condition' lambda and it expects a boolean
 
 ## Constants
 ```
-true, false, e, PI
+word	stack notation	explanation
+true	( -- a )	a:boolean is true
+false	( -- a )	a:boolean is false
+e	( -- a )	a:number is math constant e 
+PI	( -- a )	a:number is math constant PI
+null 	( -- a )	a:null is null value
 ```
 
 ## Lists
@@ -124,14 +129,7 @@ true, false, e, PI
 A list, implemented using ArrayList, is constructed like this:
 ```
 ( elements... ) 
-```
-
-```
-word	stack notation	explanation
-
-push	( a b -- )	push a on top of b:list
-pop	( a -- b )	pops top element from a:list on top of stack as b
-size	( a -- b )	b is size of list a:list
+list!
 ```
 
 ## Maps
@@ -142,15 +140,59 @@ A map is a dictionary that maps keys to values. A map is created like this:
 map!
 ```
 
+## Collection words
+
+Words defined on lists:
 ```
 word	stack notation	explanation
 
-put	( a b c -- )	add pair of b:key and a:value to dictionary c
-get	( a b -- c )	get value associated with c:key from a:map and put on stack as c:value
-size	( a -- b )	c is size of a:map
+push	( a b -- )	push a on top of b:list
+pop	( a -- b )	pops top element from a:list on top of stack as b:object
+get	( a b -- c)     retrieve element c from b:collection using a:index or a:key
 ```
 
-MORE
+Words defined on all collection types:
+
+```
+word	stack notation	explanation
+
+size	( a -- b )	b is size of a:collection
+get	( a b -- c)     retrieve element c from b:collection using a:index or a:key
+clear	( a -- ) 	removes all elements from a
+set	( a b c -- )	add pair of b:key or b:index and a:value to dictionary c
+```
+## Variables
+
+A named variable is created like this:
+
+```
+<init value> var <name of variable>
+```
+
+This pops the top variable from the stack and initializes the variable when first created.
+
+
+
+Setting the variable with a new value is done like this:
+
+```
+<new value> ! <name of variable>
+```
+
+Naming the variable will put it's current variable on the stack so the following will output 99 to stdout:
+
+```
+42 var life 
+99 ! life
+life puts
+```
+
+```
+word	stack notation	explanation
+var	( a -- )	creates a named variable and initializes it with a
+!	( a -- )	sets the variable named by value a
+```
+
 
 
 
