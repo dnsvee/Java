@@ -7,60 +7,82 @@ Forth is a programming language with very little syntax and simple semantics. Wh
 Running a Forth command looks like this:
 1 2 + puts
 
-This first puts the two numbers on the stack and then it runs the '+' command. This command pops both numbers; add them together; and place the sum back on the stack. The 'puts' word outputs the value to standard output. 
+This first puts the two numbers on the stack and then it runs the '+' command. This command pops both numbers from the stack numbers and adds them together; the sum is placed on top of the stack. The 'puts' word outputs the value to standard output. 
 
-To describe for each word what type of elements it consumes from the stack and what values it pushes it back on the stack and in what order a notation called stack notation will be used. So for the word '+' which sums numbers the following stack notation is used: ( a b -- c ) where a, b are numbers and c is the result of adding a and b. The part before the dashes is the state before calling the word where 'b' is top of the stack and 'a' is the second element on the stack. The part after the dashes is the description of the relevant part of the stack after calling the word. 
+To describe for each word what type of elements it consumes from the stack and what values it pushes back on the stack; and in what representation called stack notation will be used. So for the word '+' which sums numbers the following stack notation is used: ( a b -- c ) where a, b are numbers and c is the result of adding a and b. The part before the dashes is the state of the stack before calling the word where 'b' is top of the stack and 'a' is below it. The part after the dashes is the description of top of the stack of the elements put their by the word.
 
-This interpreter also has available second stack for use.
+This interpreter also has available a second stack for use.
 
-The available types in the language are double, long, string, boolean, list, dictionary, anonymous function
+The available types in the language are double, long, string, boolean, list, map, set.
 
 ## Numbers
 
-Numbers default to double values and can be written using the syntax supported by the Double.valueOf operator defined in the Java reference; 0.01, 1, -3.14 are legal values.
+Numbers by default are double values and can be written using the syntax supported by the Double.valueOf operator described in the Java reference.
 
-These words that work on numbers are currently defined:
+Legal values are
+```
+0.01
+1
+-3.14 
+```
 
-These words only work on numbers:
+Here is a list of words that only work on numbers. Other words can also be used on numbers and will be described later.
 
 ```
 word	stack notation	explanation
-+	( a b -- c )    c == a + b
--	( a b -- c )    c == a - b
-*	( a b -- c )	c == a * b
-/	( a b -- c )	c == a / b
-**	( a b -- c ) 	c == pow(a, b)
-sin	( a b -- c )	c = sin(a)
-cos	( a b -- c )	c = cos(a)
-tan	( a b -- c )	c = tan(a)
-abs	( a   -- b )	b = abs(a)
->	( a b -- c )    c:boolean == a > b
-<	( a b -- c )    c:boolean == a < b
->=	( a b -- c )    c:boolean == a <= b
-<=	( a b -- c )    c:boolean == a >= b
++	( a b -- c )    c is a + b
+-	( a b -- c )    c is a - b
+*	( a b -- c )	c is a * b
+/	( a b -- c )	c is a / b
+**	( a b -- c ) 	c is pow(a, b)
+sin	( a b -- c )	c is sin(a)
+cos	( a b -- c )	c is cos(a)
+tan	( a b -- c )	c is tan(a)
+abs	( a   -- b )	b is abs(a)
+log	( a   -- b )	b is log(a)
+sqrt	( a   -- b )	b is sqrt(a)
+floot   ( a   -- b ) 	b is floor(a)
+min	( a b -- c ) 	c is min(a, b)
+max	( a b -- c ) 	c is max(a, b)
+>	( a b -- c )    c:boolean is a > b
+<	( a b -- c )    c:boolean is a < b
+>=	( a b -- c )    c:boolean is a <= b
+<=	( a b -- c )    c:boolean is a >= b
 ```
-
 
 Words that work on all types:
 
 ```
-word	stack notation	explanation
-==	( a b -- c )	c:boolean == a.equalsTo(b)
-puts	( a -- ) 	outputs top stack element as strign to stdout
+word	stack notation		explanation
+
+==	( a b     -- c )	c is a == b
+putnl   ( a       --   )	outputs element a followed by a newline to standard output
+puts    ( a       --   ) 	outputs element a to standard output
+nl      (         --   ) 	outputs newline to standard output
+space   ( 	  --   ) 	outputs a space to standard output
+fmt     ( ... a b -- c ) 	... is a list of elements of size a:number and b is a format string
+		 		c is the result of formatting using String.format 
+cmp    	( a b     -- c )	c is a.compareTo(b)
+class?  ( a       -- b ) 	b is the class name of a:object
 ```
 
 ## Strings
 
-If Forth does not recognize a word it will consider it a string literal. The word " will treat the next word as a string literal. Strings can have embedded spaces in them prefaced with a backslash. Strings support the escape sequences \s and \n.
+If Forth does not recognize a word it will consider it a string literal. The (macro) word " will treat the next word as a string literal. Strings can have embedded spaces in them prefaced with a backslash. Strings support the escape sequences \s and \n.
 
-```
 These are all valid strings:
+```
 Hello 
 " Hello 
 Hello\ world!
 Line\sone\nLine\stwo\n
 ```
 
+```
+word	stack notation	explanation
+"	( -- b ) 	macro; parses a word from the input buffer and puts it on the stack
+strlen  ( a -- b ) 	b is length of a:string
+```
 ## Stack ordering
 
 Objects on the stack can be rearranged if necessary. Sometimes the order of words must be swapped to accomadate a word.
