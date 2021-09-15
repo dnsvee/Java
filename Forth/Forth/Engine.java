@@ -40,7 +40,6 @@ public class Engine {
 
 	// constructor
 	public Engine() {
-		SimpleEntry<Integer, String> entry = new SimpleEntry<>(1, "abc");
 		Dict  = new Stack();
 		Stack = new Stack();
 		Second= new Stack();
@@ -297,26 +296,11 @@ public class Engine {
 			});
 		});
 
-		// support for lambas
-		// all commands between [ and ] are part of a callable function that can
-		// be called with call so [ 1 2 + ] call will put 3 on the stack
-		// the lambda address will be pu ton the second stack and popped when call is called
-		macro("[", (Engine E) -> {
-			Stuff.push(Dict.size());
-			Dict.push(null);
+		macro("", (Engine E) -> {
 		});
 
-		macro("]", (Engine E) -> {
-			leave();
-			int i = Dict.size();
-			int j = (Integer) Stuff.pop();
-			Dict.set(j, (Consumer<Engine>) (Engine e) -> {
-				IP = i;
-			});
-			Dict.push((Consumer<Engine>) (Engine) -> {
-				Second.push(j + 1);
-				IP++;
-			});
+		// calls lambda for each element in set
+		macro("@", (Engine E) -> {
 		});
 
 		// calls a lambda
@@ -325,42 +309,65 @@ public class Engine {
 			IP = (Integer) Second.pop();
 		});
 
-		// loops while a condition is held
-		// [ ... ] [ ... ] while
-		// the first lambda is called provides the boolean that when true
-		// call the second lambda
+		// do while repeat
+		macro("do", (Engine E) -> {
+			Stuff.push(Dict.size());
+		});
+
 		macro("while", (Engine E) -> {
-			Dict.push((Consumer<Engine>) (Engine) -> {
-				Trail[++iTrail] = IP + 1;
-				IP = (Integer) Second.get(Second.size() - 2);
-			});
+			Stuff.push(Dict.size() + 1);
 
 			Dict.push((Consumer<Engine>) (Engine) -> {
-				if ((Boolean) Stack.pop()) {
-					Trail[++iTrail] = IP - 1;
-					IP = (Integer) Second.get(Second.size() - 1);
-				} else {
-					Second.pop();
-					Second.pop();
+				Boolean b = (Boolean) Stack.pop();
+				if (b) 
+					IP += 2;
+				else
+					IP = (int) Dict.get(IP + 1);
+			});
+			Dict.push(null);
+		});
+
+		macro("repeat", (Engine E) -> {
+			int b = (int) Stack.pop();
+			int a = (int) Stack.pop();
+
+			Dict.push((Consumer<Engine>) (Engine) -> {
+				IP = a;
+			});
+
+			Dict.set(b, Dict.size());
+		});
+
+		macro("if", (Engine E) -> {
+			Dict.push((Consumer<Engine>) (Engine) -> {
+				Boolean b = (Boolean) Stack.pop();
+				if (b) 
+					IP += 2;
+				else
 					IP++;
-				}
+			});
+			Stuff.push(Dict.size());
+			Dict.push(null);
+		});
+
+		macro("else", (Engine E) -> {
+			int a = (Integer) Stuff.pop();
+
+			Stuff.push(Dict.size());
+			Dict.push(null);
+
+			int sz = Dict.size();
+			Dict.set(a, (Consumer<Engine>) (Engine) -> {
+				IP = sz;
 			});
 		});
 
-		// the if then else control struct
-		// [ ... ] [ ...] test
-		// consume the boolean on the top of the stack and calls the first it is
-		// true; otherwise it calls the second
-		builtin("test", (Engine E) -> {
-			Object f = Second.pop();
-			Object t = Second.pop();
-
-			Trail[++iTrail] = IP + 1;
-
-			if ((Boolean) Stack.pop()) 
-				IP = (Integer) t;
-			else
-				IP = (Integer) f;
+		macro("then", (Engine E) -> {
+			int a = (int) Stuff.pop();
+			int sz = Dict.size();
+			Dict.set(a, (Consumer<Engine>) (Engine) -> {
+				IP = sz;
+			});
 		});
 
 		// displays all known words
@@ -439,41 +446,57 @@ public class Engine {
 		});
 
 		builtin("get",    (Engine E) -> {
-			if (Stack.peek() instanceof HashMap) {
-				HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-				Stack.push(o.get(Stack.pop()));
-			} else { // just assume it's a list
-				ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
-				Stack.push(o.get((Integer) Stack.pop()));
-			}
+			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+			Stack.push(o.get(Stack.pop()));
+			IP++;
+		});
+
+		builtin("at",    (Engine E) -> {
+			ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
+			Stack.push(o.get((Integer) Stack.pop()));
+			IP++;
+		});
+
+		builtin("add",    (Engine E) -> {
+			Collection c = (Collection) Stack.pop();
+			c.add(Stack.pop());
+			IP++;
+		});
+
+		builtin("has",    (Engine E) -> {
+			Collection c = (Collection) Stack.pop();
+			Stack.push(c.contains(Stack.pop()));
+			IP++;
+		});
+
+		builtin("put",    (Engine E) -> {
+			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+			o.put( Stack.pop(), Stack.pop() );
 			IP++;
 		});
 
 		builtin("set",    (Engine E) -> {
-			if (Stack.peek() instanceof HashMap) {
-				HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-				o.put( Stack.pop(), Stack.pop() );
-			} else { // just assume it's a list
-				ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
-				o.set((Integer) Stack.pop(), Stack.pop() );
-			}
+			ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
+			o.set((Integer) Stack.pop(), Stack.pop() );
 			IP++;
 		});
 
-		builtin("del",    (Engine E) -> {
-			if (Stack.peek() instanceof HashMap) {
-				HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-				o.remove( Stack.pop() );
-			} else { // just assume it's a list
-				ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
-				int i = (Integer) Stack.pop();
-				o.remove(i);
-			}
+		builtin("cut",    (Engine E) -> {
+			// remove from and to
+			ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
+			int i = (Integer) Stack.pop();
+			o.remove(i);
+			IP++;
+		});
+
+		builtin("rem",    (Engine E) -> {
+			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+			o.remove( Stack.pop() );
 			IP++;
 		});
 
 		// ( a b -- a ) adds b:collection to a:collection
-		builtin("concat",    (Engine E) -> {
+		builtin("addall",    (Engine E) -> {
 			Collection c = (Collection) Stack.pop();
 			((Collection) Stack.peek()).addAll(c);
 		        IP++;	
@@ -486,6 +509,7 @@ public class Engine {
 		        IP++;	
 		});
 
+
 		class Marker {}
 
 		// list data structure
@@ -493,6 +517,23 @@ public class Engine {
 		// asks as a terminator for the list constuctor
 		macro("(",    (Engine E) -> {
 			literal(new Marker());
+		});
+
+		// for set 
+		macro("(+",    (Engine E) -> {
+			literal(new Marker());
+		});
+
+		// build set
+		builtin("+)",    (Engine E) -> {
+			HashSet set = new HashSet();
+			Object o = Stack.pop();
+			while (!(o instanceof Marker)) {
+				set.add(o);
+				o = Stack.pop();
+			}
+			Stack.push(set);
+			IP++;
 		});
 
 		// list constructor
@@ -531,13 +572,30 @@ public class Engine {
 			IP++;
 		});
 
+		// creates an iterator from a collection
+		builtin("iter!",    (Engine E) -> {
+			Collection c = (Collection) Stack.pop();
+			Stack.push(c.iterator());
+			IP++;
+		});
+
+		// puts next on stack otherwise it will leave top of stack
+		// null iter next will replace null with next value 
+		builtin("next",    (Engine E) -> {
+			Iterator i = (Iterator) Stack.pop();
+			if (i.hasNext()) {
+				Stack.pop();
+				Stack.push(i.hasNext());
+			} 
+			IP++;
+		});
 	}
 
 	// compile a builtin word
 	// fix: add help string
 	public void compile(String s, Consumer<Engine> c, int type) {
 		Dict.add(s);
-		Dict.add(type);   // builtin
+		Dict.add(type);   // 1 bultin, 2 macro, 3 variable
 		Dict.add(top);
 		Dict.add(c);
 		top = Dict.size() - 4;
