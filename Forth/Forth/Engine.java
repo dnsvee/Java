@@ -56,13 +56,13 @@ public class Engine {
 			throw new RuntimeException();
 		});
 
-		// displays TOS as string
+		// ( a -- ) outputs element a to standard output
 		builtin("puts", (Engine E) -> { 
 			System.out.printf("%s", Stack.pop());
 			IP++;
 		});
 
-		// displays TOS as string
+		// ( a -- ) outputs element a followed by a newline to standard output
 		builtin("putnl", (Engine E) -> { 
 			System.out.printf("%s\n", Stack.pop());
 			IP++;
@@ -74,11 +74,6 @@ public class Engine {
 			compile("puts");
 		});
 
-		// ( a -- b ) b is name of class of a:object
-		builtin("class?", (Engine E) -> { 
-			Stack.push(Stack.pop().getClass());
-			IP++;
-		});
 
 		macro("\"", (Engine E) -> { 
 			literal(Words.pop());
@@ -96,15 +91,14 @@ public class Engine {
 			IP++;
 		});
 
-		// all constant
+		// all constants
 		constant("true",  true);
 		constant("false", false);
 		constant("PI",    Math.PI);
 		constant("e",     Math.E);
 		constant("null",  null);
 
-		// add two numbers
-		// a b + => <a + b>
+		// ( a b -- c )    c is a + b
 		builtin("+",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
@@ -112,7 +106,7 @@ public class Engine {
 			IP++;
 		});
 
-		// a b  - => <a - b>
+		// ( a b -- c )    c is a - b
 		builtin("-",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
@@ -120,7 +114,7 @@ public class Engine {
 			IP++;
 		});
 
-		// a b * => <a * b>
+		// ( a b -- c )	c is a * b
 		builtin("*",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
@@ -128,7 +122,7 @@ public class Engine {
 			IP++;
 		});
 
-		// a b / => <a / b>
+		// ( a b -- c )	c is a / b
 		builtin("/",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
@@ -136,7 +130,7 @@ public class Engine {
 			IP++;
 		});
 
-		// a b max => <max(a, b)>
+		// ( a b -- c ) c is max(a, b)
 		builtin("max",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
@@ -144,7 +138,7 @@ public class Engine {
 			IP++;
 		});
 
-		// a b min => <min(a, b)>
+		// ( a b -- c ) c is min(a, b)
 		builtin("min",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
@@ -152,7 +146,7 @@ public class Engine {
 			IP++;
 		});
 
-		// a b ** => <pow(a, b)>
+		// ( a b -- c ) c is pow(a, b)
 		builtin("**",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
@@ -160,8 +154,7 @@ public class Engine {
 			IP++;
 		});
 
-		// works only on numbers
-		// a b > => <a > b:boolean>
+		// ( a b -- c) c is a > b
 		builtin(">",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
@@ -169,8 +162,15 @@ public class Engine {
 			IP++;
 		});
 
-		// works only on numbers
-		// a b < => <a < b:boolean>
+		// ( a b -- c) c is a >= b
+		builtin(">=",    (Engine E) -> {
+			Number b = (Number) Stack.pop();
+			Number a = (Number) Stack.pop();
+			Stack.add(a.doubleValue() >= b.doubleValue());
+			IP++;
+		});
+
+		// ( a b -- c) c is a < b
 		builtin("<",    (Engine E) -> {
 			Number b = (Number) Stack.pop();
 			Number a = (Number) Stack.pop();
@@ -178,8 +178,15 @@ public class Engine {
 			IP++;
 		});
 
-		// a b cmp => <a.compareTo(b)>
-		// compares anything that implements Comparable
+		// ( a b -- c) c is a <= b
+		builtin("<=",    (Engine E) -> {
+			Number b = (Number) Stack.pop();
+			Number a = (Number) Stack.pop();
+			Stack.add(a.doubleValue() <= b.doubleValue());
+			IP++;
+		});
+
+		// ( a b -- c) c is a.compareTo(b)
 		builtin("cmp",    (Engine E) -> {
 			Comparable b = (Comparable) Stack.pop();
 			Comparable a = (Comparable) Stack.pop();
@@ -187,8 +194,7 @@ public class Engine {
 			IP++;
 		});
 
-		// a b == => <a.equals(b)>
-		// compares anything that implements Comparable
+		// ( a b -- c) c is a == b
 		builtin("==",    (Engine E) -> {
 			Object b = Stack.pop();
 			Object a = Stack.pop();
@@ -196,62 +202,60 @@ public class Engine {
 			IP++;
 		});
 
-		// a sqrt => <sqrt(a)>
+		// ( a -- b ) b is sqrt(a)
 		builtin("sqrt",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.sqrt(a.doubleValue()));
 			IP++;
 		});
 
-		// a abs => <abs(a)>
+		// ( a -- b ) b is abs(a)
 		builtin("abs",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.abs(a.doubleValue()));
 			IP++;
 		});
 
-		// a cos => <cos(a)>
+		// ( a b -- c )	c is cos(a)
 		builtin("cos",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.cos(a.doubleValue()));
 			IP++;
 		});
 
-		// a sin => <sin(a)>
+		// ( a b -- c )	c is sin(a)
 		builtin("sin",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.sin(a.doubleValue()));
 			IP++;
 		});
 
-		// a tan => <tan(a)>
+		// ( a b -- c )	c is tan(a)
 		builtin("tan",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.tan(a.doubleValue()));
 			IP++;
 		});
 
-		// a log => <log(a)>
+		// ( a -- b ) b is log(a)
 		builtin("log",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.log(a.doubleValue()));
 			IP++;
 		});
 
-		// a floor => <floor(a)>
+		// ( a -- b ) b is floor(a)
 		builtin("floor",    (Engine E) -> {
 			Number a = (Number) Stack.pop();
 			Stack.add(Math.floor(a.doubleValue()));
 			IP++;
 		});
 
-		// formats stack elements as a string
-		// Objects... <number of objects> <format string> fmt
-		// example: 42 hello 2 %d:%s fmt
+		// ( ... a b -- c ) ... is a list of elements of size a:number and b is a format string
+		// 		    c is the result of formatting using String.format 
 		builtin("fmt",    (Engine E) -> {
 			String a = (String) Stack.pop();
-			Number b = (Number) Stack.pop();
-			int sz = b.intValue();
+			int sz = ((Number) Stack.pop()).intValue();
 			Object[] arr = Stack.subList(Stack.size() - sz, Stack.size()).toArray();
 
 			for(int i = 0; i < sz; i++)
@@ -322,14 +326,14 @@ public class Engine {
 				if (b) 
 					IP += 2;
 				else
-					IP = (int) Dict.get(IP + 1);
+					IP = (Integer) Dict.get(IP + 1);
 			});
 			Dict.push(null);
 		});
 
 		macro("repeat", (Engine E) -> {
-			int b = (int) Stack.pop();
-			int a = (int) Stack.pop();
+			int b = (int) Stuff.pop();
+			int a = (int) Stuff.pop();
 
 			Dict.push((Consumer<Engine>) (Engine) -> {
 				IP = a;
@@ -338,6 +342,7 @@ public class Engine {
 			Dict.set(b, Dict.size());
 		});
 
+		// if then else
 		macro("if", (Engine E) -> {
 			Dict.push((Consumer<Engine>) (Engine) -> {
 				Boolean b = (Boolean) Stack.pop();
@@ -433,7 +438,7 @@ public class Engine {
 			IP++;
 		});
 
-		// map! 
+		// map constructor
 		builtin("map!",    (Engine E) -> {
 			Stack.push(new HashMap<Object, Object>());
 			IP++;
@@ -441,64 +446,76 @@ public class Engine {
 
 		// list constructor
 		builtin("list!",    (Engine E) -> {
-			Stack.push(new ArrayList<Object>());
+			Stack.push(new Vector<Object>());
 			IP++;
 		});
 
+		// set constructor
+		builtin("set!",    (Engine E) -> {
+			Stack.push(new HashSet<Object>());
+			IP++;
+		});
+
+		// map::get
 		builtin("get",    (Engine E) -> {
 			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
 			Stack.push(o.get(Stack.pop()));
 			IP++;
 		});
 
+		// arraylist::at
 		builtin("at",    (Engine E) -> {
-			ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
+			Vector<Object> o = (Vector<Object>) Stack.pop();
 			Stack.push(o.get((Integer) Stack.pop()));
 			IP++;
 		});
 
+		// arraylist::set
+		builtin("set",    (Engine E) -> {
+			Vector<Object> o = (Vector<Object>) Stack.pop();
+			o.set((Integer) Stack.pop(), Stack.pop() );
+			IP++;
+		});
+
+		// collection:add
 		builtin("add",    (Engine E) -> {
 			Collection c = (Collection) Stack.pop();
 			c.add(Stack.pop());
 			IP++;
 		});
 
+		// collection::has (contains)
 		builtin("has",    (Engine E) -> {
 			Collection c = (Collection) Stack.pop();
 			Stack.push(c.contains(Stack.pop()));
 			IP++;
 		});
 
+		// map::put
 		builtin("put",    (Engine E) -> {
 			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-			o.put( Stack.pop(), Stack.pop() );
+			o.put(Stack.pop(), Stack.pop());
 			IP++;
 		});
 
-		builtin("set",    (Engine E) -> {
-			ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
-			o.set((Integer) Stack.pop(), Stack.pop() );
-			IP++;
-		});
-
+		// arraylist::remove index
 		builtin("cut",    (Engine E) -> {
 			// remove from and to
-			ArrayList<Object> o = (ArrayList<Object>) Stack.pop();
-			int i = (Integer) Stack.pop();
-			o.remove(i);
+			Vector<Object> o = (Vector<Object>) Stack.pop();
+			o.remove((int) Stack.pop());
 			IP++;
 		});
 
-		builtin("rem",    (Engine E) -> {
-			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-			o.remove( Stack.pop() );
+		// collection:remove
+		builtin("del",    (Engine E) -> {
+			Collection o = (Collection) Stack.pop();
+			o.remove(Stack.pop());
 			IP++;
 		});
 
 		// ( a b -- a ) adds b:collection to a:collection
-		builtin("addall",    (Engine E) -> {
-			Collection c = (Collection) Stack.pop();
-			((Collection) Stack.peek()).addAll(c);
+		builtin("concat",    (Engine E) -> {
+			((Collection) Stack.peek()).addAll((Collection) Stack.pop());
 		        IP++;	
 		});
 
@@ -509,17 +526,9 @@ public class Engine {
 		        IP++;	
 		});
 
-
 		class Marker {}
 
-		// list data structure
-		//
-		// asks as a terminator for the list constuctor
-		macro("(",    (Engine E) -> {
-			literal(new Marker());
-		});
-
-		// for set 
+		// set literal
 		macro("(+",    (Engine E) -> {
 			literal(new Marker());
 		});
@@ -536,33 +545,41 @@ public class Engine {
 			IP++;
 		});
 
-		// list constructor
-		// pops values from stack and adds them to list until terminator is encountered
+		// list literal
+		macro("(",    (Engine E) -> {
+			literal(new Marker());
+		});
+
+		// list literal; reverses list when done
 		builtin(")",    (Engine E) -> {
-			ArrayList lst = new ArrayList();
+			Vector lst = new Vector();
 			Object o = Stack.pop();
+
 			while (!(o instanceof Marker)) {
 				lst.add(o);
 				o = Stack.pop();
 			}
+
 			for(int i = 0; i < lst.size() / 2; i++) {
 				Object tmp = lst.get(i);
 				lst.set(i, lst.get(lst.size() - 1 - i));
 				lst.set(lst.size() - 1 - i, tmp);
 			}
+
 			Stack.push(lst);
 			IP++;
 		});
 
 		// push to list
 		builtin("push",    (Engine E) -> {
-			((ArrayDeque) Stack.pop()).addLast(Stack.pop());
+			((Vector) Stack.pop()).add(Stack.pop());
 			IP++;
 		});
 
 		// pop from list
 		builtin("pop",    (Engine E) -> {
-			Stack.push(((ArrayDeque) Stack.pop()).removeLast());
+			Vector c = (Vector) Stack.pop();
+			Stack.push(c.remove(c.size() - 1));
 			IP++;
 		});
 
@@ -579,14 +596,21 @@ public class Engine {
 			IP++;
 		});
 
-		// puts next on stack otherwise it will leave top of stack
-		// null iter next will replace null with next value 
+		// replaces element on top of stack with next element from iterator if exists
 		builtin("next",    (Engine E) -> {
 			Iterator i = (Iterator) Stack.pop();
+
 			if (i.hasNext()) {
 				Stack.pop();
 				Stack.push(i.hasNext());
 			} 
+
+			IP++;
+		});
+
+		// ( a -- b ) b is the class name of a:object
+		builtin("class?", (Engine E) -> { 
+			Stack.push(Stack.pop().getClass());
 			IP++;
 		});
 	}
