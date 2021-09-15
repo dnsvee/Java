@@ -83,17 +83,18 @@ word	stack notation	explanation
 "	( -- b ) 	macro; parses a word from the input buffer and puts it on the stack
 strlen  ( a -- b ) 	b is length of a:string
 ```
+
 ## Stack ordering
 
-Objects on the stack can be rearranged if necessary. Sometimes the order of words must be swapped to accomadate a word.
+Objects on the stack can be rearranged if necessary. Sometimes the order of tack elements must be reordered to accomadate a word.
 
 ```
 word	stack notation		explanation
 
-dup 	( a -- a a )		duplicates the top word
-swap 	( a b -- b a )		swaps the top two words
-drop 	( a -- )		pops the top element
-nip  	( a b -- b )    	drops the element below the top element
+dup 	( a   -- a a   )	duplicates the top word
+swap 	( a b -- b a   )	swaps the top two words
+drop 	( a   --       )	pops the top element
+nip  	( a b -- b     )    	drops the element below the top element
 over 	( a b -- a b a ) 	duplicates the object under the top element
 ```
 
@@ -102,39 +103,29 @@ There is also a second stack. The stack notation is extended to read ( a ; c -- 
 ```
 word	stack notation		explanation
 
-twirl	( a ; b -- b ; a )	swaps top elements of both stack
-raise 	( a ; -- ; a )		moves elements from main to second stack
-lower	( ; a -- a ; ) 		moves elements from second to main stack
+twirl	( a ; b -- b ; a )	swaps top element of both stack
+raise 	( a ;   -- ; a )	moves element from main to second stack
+lower	( ; a   -- a ; ) 	moves element from second to main stack
 ```
-
-## Lambdas
-
-A lambda or anonymous function groups word together in a single statemen. The lambda can be called using the word call like this:
-```
-[ ... do something ... ] call
-```
-
-Lambdas on the stack are represented with numbers and placed by default on the second stack.
 
 ## Conditional
 
-The if/then/else construct found in other languages is implemented like this
-
+The if/then/else construct found in other languages is implemented like this:
 ```
-boolean [ <called when true> ] [ <called when false> ] test 
+<boolean> if <execute when true> then 
+<boolean> if <execute when true> else <execute when false> then
 ```
 
-'test' consumes the boolean on the top of the stack and if it is true it will call the first lambda otherwise it will call the second one. Both lambdas are placed on the second stack so the boolean is is on top of the main stack.
+The if consumes the boolean on the top of the stack.
 
 ## Looping
 
 The while or for loop construct found in other languages is implemented like this:
-
 ```
-[ condition ] [ loop body ] while
+do <executes and leaves a boolean on top of stack> while <executes once when true> repeat
 ```
 
-The 'while' word will first call the 'condition' lambda and it expects a boolean to be the top stack element.  If it is true it will call the second lambda. When the boolean is false if will end the loop and pop both lambdas from the second stack. 
+While consumes the boolean on the top of the stack.
 
 ## Constants
 ```
@@ -148,18 +139,26 @@ null 	( -- a )	a:null is null value
 
 ## Lists
 
-A list, implemented using ArrayList, is constructed like this:
+A list, implemented using Vector is constructed like this:
 ```
 ( elements... ) 
 list!
 ```
 
+The first form is a literal. Note that when the list is constructed it is reversed to match the way it is visually represented so when a list is made like ( 1 2 3 4 ) then 1 is the first element and 4 the last.
+
 ## Maps
 
-A map is a dictionary that maps keys to values. A map is created like this:
-
+A map is a dictionary implemented using HashMap that maps keys to values. A map is created like this:
 ```
 map!
+```
+## Set
+
+A set is implemented using HashSet and can be constructed like this:
+```
+(+ .... +)
+set!
 ```
 
 ## Collection words
