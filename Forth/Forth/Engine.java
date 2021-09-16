@@ -1,6 +1,7 @@
 package Forth;
 
 import java.util.*;
+import java.lang.*;
 import java.nio.*;
 import java.io.*;
 import java.nio.charset.*;
@@ -68,35 +69,29 @@ public class Engine {
 			IP++;
 		});
 
-		// formats stack elements and outputs them to stdout
-		macro("putf", (Engine E) -> { 
-			compile("fmt");
-			compile("puts");
-		});
-
-
-		macro("\"", (Engine E) -> { 
-			literal(Words.pop());
-		});
-
-		// display a newline
+		// ( -- ) outputs newline to standard output
 		builtin("nl", (Engine E) -> { 
 			System.out.println();
 			IP++;
 		});
 
-		// displays a space
+		// ( -- ) outputs a space to standard output
 		builtin("space", (Engine E) -> { 
 			System.out.printf(" ");
 			IP++;
 		});
 
-		// all constants
-		constant("true",  true);
-		constant("false", false);
-		constant("PI",    Math.PI);
-		constant("e",     Math.E);
-		constant("null",  null);
+		// ( -- b ) macro; parses a word from the input buffer and puts it on the stack
+		macro("\"", (Engine E) -> { 
+			literal(Words.pop());
+		});
+
+		// ( a -- b ) b is length of a:string
+		builtin("strlen", (Engine E) -> { 
+			Stack.push(((String) Stack.pop()).length());
+			IP++;
+		});
+
 
 		// ( a b -- c )    c is a + b
 		builtin("+",    (Engine E) -> {
@@ -303,15 +298,6 @@ public class Engine {
 		macro("", (Engine E) -> {
 		});
 
-		// calls lambda for each element in set
-		macro("@", (Engine E) -> {
-		});
-
-		// calls a lambda
-		builtin("call", (Engine E) -> {
-			Trail[++iTrail] = IP + 1;
-			IP = (Integer) Second.pop();
-		});
 
 		// do while repeat
 		macro("do", (Engine E) -> {
@@ -450,107 +436,19 @@ public class Engine {
 			IP++;
 		});
 
-		// set constructor
-		builtin("set!",    (Engine E) -> {
-			Stack.push(new HashSet<Object>());
-			IP++;
-		});
-
-		// map::get
-		builtin("get",    (Engine E) -> {
-			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-			Stack.push(o.get(Stack.pop()));
-			IP++;
-		});
-
-		// arraylist::at
-		builtin("at",    (Engine E) -> {
-			Vector<Object> o = (Vector<Object>) Stack.pop();
-			Stack.push(o.get((Integer) Stack.pop()));
-			IP++;
-		});
-
-		// arraylist::set
-		builtin("set",    (Engine E) -> {
-			Vector<Object> o = (Vector<Object>) Stack.pop();
-			o.set((Integer) Stack.pop(), Stack.pop() );
-			IP++;
-		});
-
-		// collection:add
-		builtin("add",    (Engine E) -> {
-			Collection c = (Collection) Stack.pop();
-			c.add(Stack.pop());
-			IP++;
-		});
-
-		// collection::has (contains)
-		builtin("has",    (Engine E) -> {
-			Collection c = (Collection) Stack.pop();
-			Stack.push(c.contains(Stack.pop()));
-			IP++;
-		});
-
-		// map::put
-		builtin("put",    (Engine E) -> {
-			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-			o.put(Stack.pop(), Stack.pop());
-			IP++;
-		});
-
-		// arraylist::remove index
-		builtin("cut",    (Engine E) -> {
-			// remove from and to
-			Vector<Object> o = (Vector<Object>) Stack.pop();
-			o.remove((int) Stack.pop());
-			IP++;
-		});
-
-		// collection:remove
-		builtin("del",    (Engine E) -> {
-			Collection o = (Collection) Stack.pop();
-			o.remove(Stack.pop());
-			IP++;
-		});
-
-		// ( a b -- a ) adds b:collection to a:collection
-		builtin("concat",    (Engine E) -> {
-			((Collection) Stack.peek()).addAll((Collection) Stack.pop());
-		        IP++;	
-		});
-
-		// ( a -- ) clears a:collection
-		builtin("clear",    (Engine E) -> {
-			Collection c = (Collection) Stack.pop();
-			c.clear();
-		        IP++;	
-		});
-
+		// used as a sign marker for certain words
 		class Marker {}
-
-		// set literal
-		macro("(+",    (Engine E) -> {
-			literal(new Marker());
-		});
-
-		// build set
-		builtin("+)",    (Engine E) -> {
-			HashSet set = new HashSet();
-			Object o = Stack.pop();
-			while (!(o instanceof Marker)) {
-				set.add(o);
-				o = Stack.pop();
-			}
-			Stack.push(set);
-			IP++;
-		});
 
 		// list literal
 		macro("(",    (Engine E) -> {
 			literal(new Marker());
 		});
 
-		// list literal; reverses list when done
+		// list literal; since the list constructor looks like ( 1 2 3 4 5 ) in the
+		// source code the expectation is that 1 is the head and 5 is the tail
+		// but because Forth uses a stack the 5 is actually on top of the stack
+		// and added first to new list and 1 is added as the last item
+		// because of this the list iwhen build is reversed 
 		builtin(")",    (Engine E) -> {
 			Vector lst = new Vector();
 			Object o = Stack.pop();
@@ -570,33 +468,117 @@ public class Engine {
 			IP++;
 		});
 
-		// push to list
+		// set! ( -- a ) a is a new set
+		builtin("set!",    (Engine E) -> {
+			Stack.push(new HashSet<Object>());
+			IP++;
+		});
+
+		// set literal, ex.: (+ 1 2 3 +)
+		macro("(+",    (Engine E) -> {
+			literal(new Marker());
+		});
+
+		builtin("+)",    (Engine E) -> {
+			HashSet set = new HashSet();
+			Object o = Stack.pop();
+			while (!(o instanceof Marker)) {
+				set.add(o);
+				o = Stack.pop();
+			}
+			Stack.push(set);
+			IP++;
+		});
+
+		// get ( b a -- c ) get c:value from b:key in a:map
+		builtin("get",    (Engine E) -> {
+			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+			Stack.push(o.get(Stack.pop()));
+			IP++;
+		});
+
+		// at ( b a -- c ) get c:value at index b:number from a:list
+		builtin("at",    (Engine E) -> {
+			Vector<Object> o = (Vector<Object>) Stack.pop();
+			Stack.push(o.get((Integer) Stack.pop()));
+			IP++;
+		});
+
+		// set ( a b c -- ) set value of index b:number in list:c to value a
+		builtin("set",    (Engine E) -> {
+			Vector<Object> o = (Vector<Object>) Stack.pop();
+			o.set((Integer) Stack.pop(), Stack.pop() );
+			IP++;
+		});
+
+		// add ( b a - ) add value b to a:collection
+		builtin("add",    (Engine E) -> {
+			Collection c = (Collection) Stack.pop();
+			c.add(Stack.pop());
+			IP++;
+		});
+
+		// has ( b a -- c ) b is true or false if b is in a:collection or not
+		builtin("has",    (Engine E) -> {
+			Collection c = (Collection) Stack.pop();
+			Stack.push(c.contains(Stack.pop()));
+			IP++;
+		});
+
+		// put ( c b a -- ) puts b:key and c:value in a:map
+		builtin("put",    (Engine E) -> {
+			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+			o.put(Stack.pop(), Stack.pop());
+			IP++;
+		});
+
+		// del ( b a -- ) remove b:value from a:collection 
+		builtin("del",    (Engine E) -> {
+			Collection o = (Collection) Stack.pop();
+			o.remove(Stack.pop());
+			IP++;
+		});
+
+		// ( b a -- b ) adds a:collection to b:collection
+		builtin("union",    (Engine E) -> {
+			((Collection) Stack.peek()).addAll((Collection) Stack.pop());
+		        IP++;	
+		});
+
+		// clear ( a -- ) clears a:collection
+		builtin("clear",    (Engine E) -> {
+			Collection c = (Collection) Stack.pop();
+			c.clear();
+		        IP++;	
+		});
+
+		// push ( b a -- ) push b:value unto a:list
 		builtin("push",    (Engine E) -> {
 			((Vector) Stack.pop()).add(Stack.pop());
 			IP++;
 		});
 
-		// pop from list
+		// pop ( a -- b ) pops b:value from a:list
 		builtin("pop",    (Engine E) -> {
 			Vector c = (Vector) Stack.pop();
 			Stack.push(c.remove(c.size() - 1));
 			IP++;
 		});
 
-		// size of collection
+		// size ( a -- b ) b:number is size of a:collection
 		builtin("size",    (Engine E) -> {
 			Stack.push(((Collection) Stack.pop()).size());
 			IP++;
 		});
 
-		// creates an iterator from a collection
+		// iter! ( a -- b ) b is an iterator over a:collection
 		builtin("iter!",    (Engine E) -> {
-			Collection c = (Collection) Stack.pop();
+			Iterable c = (Iterable) Stack.pop();
 			Stack.push(c.iterator());
 			IP++;
 		});
 
-		// replaces element on top of stack with next element from iterator if exists
+		// ( b a -- b or c ) of a:iterator has a next element replaces b with c otherwise c remains 
 		builtin("next",    (Engine E) -> {
 			Iterator i = (Iterator) Stack.pop();
 
@@ -608,10 +590,37 @@ public class Engine {
 			IP++;
 		});
 
-		// ( a -- b ) b is the class name of a:object
+		// class? ( a -- b ) b is the class name of a:object
 		builtin("class?", (Engine E) -> { 
 			Stack.push(Stack.pop().getClass());
 			IP++;
+		});
+
+		// all constants
+		constant("true",  true);
+		constant("false", false);
+		constant("PI",    Math.PI);
+		constant("e",     Math.E);
+		constant("null",  null);
+
+		macro("[", (Engine E) -> {
+			Stuff.push(Dict.size());
+			Dict.push(null);
+		});
+
+		macro("]", (Engine E) -> {
+			leave();
+			int i = (Integer) Stuff.pop();
+			int sz = Dict.size();
+			Dict.set(i, (Consumer<Engine>) (Engine) -> {
+				IP = sz;
+			});
+			literal(i + 1);
+		});
+
+		builtin("call", (Engine E) -> {
+			Trail[++iTrail] = IP + 1;
+			IP = (Integer) Stack.pop();
 		});
 	}
 
@@ -763,6 +772,9 @@ public class Engine {
 	// space is the used delimiter except when preceded by a backlash
 	// replace \s, \<space> and \n escape sequences
 	public void preparse() {
+		//String all = (String) Stack.pop();
+		//all.replaceAll("(^|\\s)#\\s.+$", "");
+
 		for(String s : ((String) Stack.pop()).split("(?<!\\\\)\\s+")) {
 			s = s.replace("\\ ", " ");
 			s = s.replace("\\s", " ");
