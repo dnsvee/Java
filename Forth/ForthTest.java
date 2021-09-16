@@ -34,8 +34,20 @@ public class ForthTest {
 				sb.append("\n");
 			}
 
-			E.Stack.add(sb.toString());
-			E.eval();
+			try {
+				E.Stack.add(sb.toString());
+				E.eval();
+			} catch (RuntimeException exp) {
+				if (f.toString().matches(".+tests$")) {
+					while (E.Stack.size() != 0) {
+						boolean b = (boolean) E.Stack.pop();
+						if (!b) {
+							System.out.println("test failed");
+						}
+					}
+				}
+			}
+
 
 			return;
 		}
