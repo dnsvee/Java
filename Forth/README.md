@@ -132,8 +132,14 @@ list!
 
 The first form is a literal. Note that when the list is constructed it is reversed to match the way it is visually represented so when a list is made like ( 1 2 3 4 ) then 1 is the first element and 4 the last.
 
+Words defined on lists:
 ```
 word	stack notation	explanation
+
+push	( b a --   )	push a on top of b:list
+pop	( a   -- b )	pops top element from a:list on top of stack as b:object
+at 	( b a -- c ) 	get c:value at index b:number from a:list
+set     ( c b a -- ) 	set value of index b:number in list:c to value a
 ```
 
 ## Maps
@@ -144,6 +150,7 @@ map!
 ```
 ```
 word	stack notation	explanation
+
 get 	( b a -- c ) 	get c:value from b:key in a:map
 put 	( c b a -- )    puts b:key and c:value in a:map
 ```
@@ -156,19 +163,7 @@ A set is implemented using HashSet and can be constructed with a constructor or 
 set!
 ```
 
-word	stack notation	explanation
-
 ## Collection words
-
-Words defined on lists:
-```
-word	stack notation	explanation
-
-push	( b a --   )	push a on top of b:list
-pop	( a   -- b )	pops top element from a:list on top of stack as b:object
-at 	( b a -- c ) 	get c:value at index b:number from a:list
-set     ( c b a -- ) 	set value of index b:number in list:c to value a
-```
 
 Words defined on all collection types:
 
