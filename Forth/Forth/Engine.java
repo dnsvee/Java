@@ -629,7 +629,6 @@ public class Engine {
 			IP++;
 		});
 
-
 		// implements named functions
 		macro("def", (Engine E) -> {
 			Stuff.push(Dict.size());
@@ -687,8 +686,24 @@ public class Engine {
 		constant("e",     Math.E);
 		constant("null",  null);
 
+		// logical operators
+		builtin("and", (Engine) -> {
+			Stack.push(((Boolean) Stack.pop()) && ((Boolean) Stack.pop()));
+			IP++;
+		});
+
+		builtin("or", (Engine) -> {
+			Stack.push(((Boolean) Stack.pop()) || ((Boolean) Stack.pop()));
+			IP++;
+		});
+
+		builtin("not", (Engine) -> {
+			Stack.push(!((Boolean) Stack.pop()));
+			IP++;
+		});
 	}
 
+	// compiles word that jumps to first instruction of a word
 	public void enter(int loc) {
 		Dict.push((Consumer<Engine>) (Engine) -> {
 			Trail[++iTrail] = IP + 1;
@@ -703,6 +718,11 @@ public class Engine {
 	}
 
 	// compiles a word
+	// first push name of word in dictionary
+	// push a number for the type of word
+	// push the index of the previous word
+	// push the Consumer object that implements the word
+	// adjust pointer 'top' to point at this word
 	// fix: add help string
 	public void compile(String s, Consumer<Engine> c, int type) {
 		Dict.add(s);
@@ -750,7 +770,8 @@ public class Engine {
 		return -1;
 	}
 
-	// puts variable of named var on the stack
+	// compiles word that pushes object stored at variable at klocation 'l'
+	// to the stack
 	public void putvar(int l) {
 		Dict.push((Consumer<Engine>) (Engine) -> {
 			Stack.push(Dict.get(l + 3));
@@ -767,13 +788,14 @@ public class Engine {
 		Dict.push(Dict.get(loc + 3));
 	}
 
-	// compile all words in th einput buffer and run the result
+	// compile all words in the input buffer and run the result
 	public void eval() {
 		preparse();
 
 		// this points to a word that throws an exception
 		Trail[++iTrail] = 0;
-		// start executing here
+
+		// start executing here when done compiling
 		int start = Dict.size();
 
 		// compile all words
@@ -781,33 +803,39 @@ public class Engine {
 			parse();
 			String s = (String) Stack.pop();
 			int loc  = find(s);
+
+			// find word 
 			if (loc >= 0) {
-				// word found; compile
+				// word found; do something depending on type
 				Integer t = (Integer) Dict.get(loc + 1);
+
+				// 1 == builtin; compile th eConsumer object to the dictionary
+				// compiles into current word
 				if (t == 1) {
 					Dict.push(Dict.get(loc + 3));
 					continue;
 				}
 
-				// word found: run
+				// 2 == macro; runs the Consumer object
 				if (t == 2) {
 					((Consumer<Engine>) Dict.get(loc + 3)).accept(this);
 					continue;
 				}
 
-				// var found: put value on stack
+				// 3 == var; puts value of var at current location
 				if (t == 3) {
 					putvar(loc);
 					continue;
 				}
 
+				// 4 == user defined word; compile an enter instruction
 				if (t == 4) {
 					enter(loc + 3);
 					continue;
 				}
 			}
-			// if macro goto run loop
 
+			// word not in dictionary
 			try {
 				// try to parse as integer
 				Integer i = Integer.parseInt(s);
@@ -822,17 +850,21 @@ public class Engine {
 				continue;
 			} catch (NumberFormatException err2) {}
 			
+			// compile as literal string
 			literal(s);
 		}
 
+		// after input buffer is compiler and all the words compiled at top-level are run
+		// return to previous calling word
 		leave();
 
 		// execute from the place where compiling started and run until exception thrown
 		IP = start;
+
 		run();
 	}
 
-	// compiles a leave instruction
+	// compiles a leave instruction; returns back to calling word
 	public void leave() {
 		Dict.push((Consumer<Engine>) (Engine E) -> {
 			IP = Trail[iTrail--];
@@ -857,9 +889,6 @@ public class Engine {
 	// space is the used delimiter except when preceded by a backlash
 	// replace \s, \<space> and \n escape sequences
 	public void preparse() {
-		//String all = (String) Stack.pop();
-		//all.replaceAll("(^|\\s)#\\s.+$", "");
-
 		for(String s : ((String) Stack.pop()).split("(?<!\\\\)\\s+")) {
 			s = s.replace("\\ ", " ");
 			s = s.replace("\\s", " ");
