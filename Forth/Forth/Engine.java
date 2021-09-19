@@ -1,5 +1,7 @@
 package Forth;
 
+// implements a Forth interpreter in Java
+
 import java.util.*;
 import java.lang.*;
 import java.nio.*;
@@ -14,7 +16,7 @@ import java.lang.Math;
 import java.util.AbstractMap.SimpleEntry;
 
 public class Engine {
-	// running stack
+	// stack with values
 	public Stack<Object>       Stack;
 
 	// second stack
@@ -26,17 +28,19 @@ public class Engine {
 	// IP of current instruction running
 	public int                 IP;
 
-	// used for returning from called word
+	// when calling a word the IP address from which it is called is stored
+	// here; when the called function returns it returns to IP stored 
+	// on the top of this stack
 	public int[]               Trail   = new int[128];
 	public int                 iTrail  = -1;
 
-	// util. stack
+	// utility stack
 	public Stack<Object>       Stuff;
 
 	// input buffer split into words
 	public ArrayDeque<String>  Words;
 
-	// top of last compiled words
+	// address of last compiled word
 	public int                 top;
 
 	// constructor
@@ -50,20 +54,23 @@ public class Engine {
 
 		top   = -1;
 
+
+		RuntimeException done = new RuntimeException();
+
 		// TOS == top of stack
-		//
-		// this word is run when input buffer is empty and no more instructions 
+		
+		// this word is run when the input buffer is empty and compiling is done
 		Dict.push((Consumer<Engine>) (Engine e) -> {
-			throw new RuntimeException();
+			throw done;
 		});
 
-		// ( a -- ) outputs element a to standard output
+		// outputs to standard output
 		builtin("puts", (Engine E) -> { 
 			System.out.printf("%s", Stack.pop());
 			IP++;
 		});
 
-		// ( a -- ) outputs element a followed by a newline to standard output
+		// outputs a string followed by a newline
 		builtin("putnl", (Engine E) -> { 
 			System.out.printf("%s\n", Stack.pop());
 			IP++;
@@ -83,7 +90,8 @@ public class Engine {
 
 		// ( -- b ) macro; parses a word from the input buffer and puts it on the stack
 		macro("\"", (Engine E) -> { 
-			literal(Words.pop());
+			parse();
+			literal(Stack.pop());
 		});
 
 		// ( a -- b ) b is length of a:string
@@ -91,7 +99,6 @@ public class Engine {
 			Stack.push(((String) Stack.pop()).length());
 			IP++;
 		});
-
 
 		// ( a b -- c )    c is a + b
 		builtin("+",    (Engine E) -> {
@@ -246,11 +253,10 @@ public class Engine {
 			IP++;
 		});
 
-		// ( ... a b -- c ) ... is a list of elements of size a:number and b is a format string
-		// 		    c is the result of formatting using String.format 
+		// formats stack elements as a string using String.format
 		builtin("fmt",    (Engine E) -> {
 			String a = (String) Stack.pop();
-			int sz = ((Number) Stack.pop()).intValue();
+			int sz = ((Number) Stack.pop()).intValue(); // numer of elements to format
 			Object[] arr = Stack.subList(Stack.size() - sz, Stack.size()).toArray();
 
 			for(int i = 0; i < sz; i++)
@@ -261,9 +267,9 @@ public class Engine {
 		});
 
 		// sets named variable with value from stack
-		// example: 11 ! number
 		macro("!", (Engine E) -> {
-			int i = find(E.Words.pop());
+			parse();
+			int i = find((String) Stack.pop());
 
 			if (i == -1)
 				throw new RuntimeException("!: var not found");
@@ -275,29 +281,26 @@ public class Engine {
 		});
 
 		// creates variable and initialize it with number from top of stack
-		// example: 42 var meaning
 		macro("var", (Engine E) -> {
 			Dict.push((Consumer<Engine>) (Engine e) -> {
 				IP = IP + 5;
 			});
 
 			int n = Dict.size();
-			Dict.add(Words.pop());
-			Dict.add(3);   // type 
+			parse();
+			Dict.add((String) Stack.pop());
+			Dict.add(3); // type 3 variable
 			Dict.add(E.top);
 			int v = Dict.size();
 			Dict.add(999);
 			E.top = n;
 
+			// sets when created with value from stack
 			Dict.push((Consumer<Engine>) (Engine E0) -> {
 				E0.Dict.set(v, E0.Stack.pop());
 				IP++;
 			});
 		});
-
-		macro("", (Engine E) -> {
-		});
-
 
 		// do while repeat
 		macro("do", (Engine E) -> {
@@ -432,7 +435,7 @@ public class Engine {
 
 		// list constructor
 		builtin("list!",    (Engine E) -> {
-			Stack.push(new Vector<Object>());
+			Stack.push(new Stack<Object>());
 			IP++;
 		});
 
@@ -450,7 +453,7 @@ public class Engine {
 		// and added first to new list and 1 is added as the last item
 		// because of this the list iwhen build is reversed 
 		builtin(")",    (Engine E) -> {
-			Vector lst = new Vector();
+			Stack lst = new Stack();
 			Object o = Stack.pop();
 
 			while (!(o instanceof Marker)) {
@@ -490,119 +493,161 @@ public class Engine {
 			IP++;
 		});
 
-		// get ( b a -- c ) get c:value from b:key in a:map
-		builtin("get",    (Engine E) -> {
+		// get from map
+		builtin("mget",    (Engine E) -> {
 			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
 			Stack.push(o.get(Stack.pop()));
 			IP++;
 		});
 
-		// at ( b a -- c ) get c:value at index b:number from a:list
-		builtin("at",    (Engine E) -> {
-			Vector<Object> o = (Vector<Object>) Stack.pop();
+		// get from list
+		builtin("aget",    (Engine E) -> {
+			Stack<Object> o = (Stack<Object>) Stack.pop();
 			Stack.push(o.get((Integer) Stack.pop()));
 			IP++;
 		});
 
-		// set ( a b c -- ) set value of index b:number in list:c to value a
-		builtin("set",    (Engine E) -> {
-			Vector<Object> o = (Vector<Object>) Stack.pop();
+		// lset 
+		builtin("aset",    (Engine E) -> {
+			Stack<Object> o = (Stack<Object>) Stack.pop();
 			o.set((Integer) Stack.pop(), Stack.pop() );
 			IP++;
 		});
 
-		// add ( b a - ) add value b to a:collection
-		builtin("add",    (Engine E) -> {
-			Collection c = (Collection) Stack.pop();
-			c.add(Stack.pop());
+		// sadd ( b a - ) add value b to a:collection
+		builtin("sadd",    (Engine E) -> {
+			((HashSet<Object>) Stack.pop()).add(Stack.pop());
 			IP++;
 		});
 
-		// has ( b a -- c ) b is true or false if b is in a:collection or not
-		builtin("has",    (Engine E) -> {
-			Collection c = (Collection) Stack.pop();
-			Stack.push(c.contains(Stack.pop()));
+		// Check if element part of set
+		builtin("shas",    (Engine) -> {
+			HashSet<Object> s = (HashSet<Object>) Stack.pop();
+			Stack.push(s.contains(Stack.pop()));
 			IP++;
 		});
 
-		// put ( c b a -- ) puts b:key and c:value in a:map
-		builtin("put",    (Engine E) -> {
-			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-			o.put(Stack.pop(), Stack.pop());
+		// Put key/value in map
+		builtin("mput",    (Engine E) -> {
+			HashMap<Object, Object> m = (HashMap<Object, Object>) Stack.pop();
+			m.put(Stack.pop(), Stack.pop());
 			IP++;
 		});
 
-		// del ( b a -- ) remove b:value from a:collection 
-		builtin("del",    (Engine E) -> {
-			Collection o = (Collection) Stack.pop();
-			o.remove(Stack.pop());
+		// Remove element from set
+		builtin("sdel",    (Engine E) -> {
+			HashSet s = (HashSet) Stack.pop();
+			s.remove(Stack.pop());
+			IP++;
+		});
+
+		// Remove element from map
+		builtin("mdel",    (Engine E) -> {
+			HashMap<Object, Object> m = (HashMap) Stack.pop();
+			m.remove(Stack.pop());
 			IP++;
 		});
 
 		// ( b a -- b ) adds a:collection to b:collection
-		builtin("union",    (Engine E) -> {
-			((Collection) Stack.peek()).addAll((Collection) Stack.pop());
+		builtin("caddall", (Engine) -> {
+			Collection a = (Collection) Stack.pop();
+			Collection b = (Collection) Stack.pop();
+			a.addAll(b);
+			Stack.push(a);
 		        IP++;	
 		});
 
-		// clear ( a -- ) clears a:collection
-		builtin("clear",    (Engine E) -> {
-			Collection c = (Collection) Stack.pop();
-			c.clear();
+		// union of sets
+		macro("sunion", (Engine E) -> {
+			compile("caddall");
+		});
+
+		// concat lists
+		macro("aconcat", (Engine E) -> {
+			compile("caddall");
+		});
+
+		// clears a collection
+		builtin("cclear",    (Engine E) -> {
+			((Collection) Stack.pop()).clear();
 		        IP++;	
 		});
 
-		// push ( b a -- ) push b:value unto a:list
-		builtin("push",    (Engine E) -> {
-			((Vector) Stack.pop()).add(Stack.pop());
+		macro("sclear", (Engine E) -> compile("cclear"));
+
+		macro("aclear", (Engine E) -> compile("cclear"));
+
+		builtin("mclear", (Engine E) -> {
+			((HashMap<Object, Object>) Stack.pop()).clear();
 			IP++;
 		});
 
-		// pop ( a -- b ) pops b:value from a:list
-		builtin("pop",    (Engine E) -> {
-			Vector c = (Vector) Stack.pop();
-			Stack.push(c.remove(c.size() - 1));
+		// Push to array
+		builtin("apush",    (Engine E) -> {
+			((Stack) Stack.pop()).push(Stack.pop());
 			IP++;
 		});
 
-		// size ( a -- b ) b:number is size of a:collection
+		// Pop from array
+		builtin("apop",    (Engine E) -> {
+			Stack s = (Stack) Stack.pop();
+			Stack.push(s.pop());
+			IP++;
+		});
+
+		// Size of collection
 		builtin("size",    (Engine E) -> {
 			Stack.push(((Collection) Stack.pop()).size());
 			IP++;
 		});
 
-		// iter! ( a -- b ) b is an iterator over a:collection
+		macro("asize", (Engine E) -> compile("size"));
+		macro("ssize", (Engine E) -> compile("size"));
+
+		builtin("msize", (Engine E) -> {
+			HashMap<Object, Object> m = (HashMap) Stack.pop();
+			Stack.push(m.size());
+			IP++;
+		});
+
+		// Creates an iterator from an Iterable
 		builtin("iter!",    (Engine E) -> {
 			Iterable c = (Iterable) Stack.pop();
 			Stack.push(c.iterator());
 			IP++;
 		});
 
-		// ( b a -- b or c ) of a:iterator has a next element replaces b with c otherwise c remains 
+		// If iterator has a next element replaces b with c otherwise c remains 
 		builtin("next",    (Engine E) -> {
 			Iterator i = (Iterator) Stack.pop();
 
 			if (i.hasNext()) {
 				Stack.pop();
-				Stack.push(i.hasNext());
+				Stack.push(i.next());
 			} 
 
 			IP++;
 		});
 
-		// class? ( a -- b ) b is the class name of a:object
-		builtin("class?", (Engine E) -> { 
-			Stack.push(Stack.pop().getClass());
-			IP++;
+
+		// implements named functions
+		macro("def", (Engine E) -> {
+			Stuff.push(Dict.size());
+			Dict.push(null);
+			parse();
+			String s = (String) Stack.pop();
+			Dict.add(s);
+			Dict.add(4);   // type 4 = user defined function
+			Dict.add(top);
+			top = Dict.size() - 3;
 		});
 
-		// all constants
-		constant("true",  true);
-		constant("false", false);
-		constant("PI",    Math.PI);
-		constant("e",     Math.E);
-		constant("null",  null);
+		macro("end", (Engine E) -> {
+			leave();
+			Dict.set((Integer) Stuff.pop(), compile_jump(Dict.size()));
+		});
 
+		// implements anonymous functions
 		macro("[", (Engine E) -> {
 			Stuff.push(Dict.size());
 			Dict.push(null);
@@ -622,19 +667,52 @@ public class Engine {
 			Trail[++iTrail] = IP + 1;
 			IP = (Integer) Stack.pop();
 		});
+
+		// class? ( a -- b ) b is the class name of a:object
+		builtin("class?", (Engine E) -> { 
+			Stack.push(Stack.pop().getClass());
+			IP++;
+		});
+
+		// clear stack
+		builtin(".clear", (Engine E) -> { 
+			Stack.clear();
+			IP++;
+		});
+
+		// all constants
+		constant("true",  true);
+		constant("false", false);
+		constant("PI",    Math.PI);
+		constant("e",     Math.E);
+		constant("null",  null);
+
 	}
 
-	// compile a builtin word
+	public void enter(int loc) {
+		Dict.push((Consumer<Engine>) (Engine) -> {
+			Trail[++iTrail] = IP + 1;
+			IP = loc;
+		});
+	}
+
+	Consumer<Engine> compile_jump(int loc) {
+		return (Consumer<Engine>) (Engine) -> {
+			IP = loc;
+		};
+	}
+
+	// compiles a word
 	// fix: add help string
 	public void compile(String s, Consumer<Engine> c, int type) {
 		Dict.add(s);
-		Dict.add(type);   // 1 bultin, 2 macro, 3 variable
+		Dict.add(type);   // 1 bultin, 2 macro, 3 variable, 4 user defined
 		Dict.add(top);
 		Dict.add(c);
 		top = Dict.size() - 4;
 	}
 
-	// compile a literal word unto the dictionary
+	// compile a literal word 
 	public void literal(Object o) {
 		Dict.push((Consumer<Engine>) (Engine) -> {
 			Stack.push(o);
@@ -649,13 +727,12 @@ public class Engine {
 		});
 	};
 
-
 	// compile a builtin word
 	public void builtin(String s, Consumer<Engine> c) {
 		compile(s, c, 1);
 	}
 
-	// compile a builtin word
+	// compile a macro word 
 	public void macro(String s, Consumer<Engine> c) {
 		compile(s, c, 2);
 	}
@@ -673,6 +750,7 @@ public class Engine {
 		return -1;
 	}
 
+	// puts variable of named var on the stack
 	public void putvar(int l) {
 		Dict.push((Consumer<Engine>) (Engine) -> {
 			Stack.push(Dict.get(l + 3));
@@ -680,7 +758,7 @@ public class Engine {
 		});
 	}
 
-
+	// compile word named `name`
 	public void compile(String name) {
 		int loc  = find(name);
 		if (loc == -1)
@@ -689,17 +767,19 @@ public class Engine {
 		Dict.push(Dict.get(loc + 3));
 	}
 
-	// compile all words and then run the program
+	// compile all words in th einput buffer and run the result
 	public void eval() {
 		preparse();
 
+		// this points to a word that throws an exception
 		Trail[++iTrail] = 0;
 		// start executing here
 		int start = Dict.size();
 
 		// compile all words
 		while (Words.size() > 0) {
-			String s = Words.pop();
+			parse();
+			String s = (String) Stack.pop();
 			int loc  = find(s);
 			if (loc >= 0) {
 				// word found; compile
@@ -718,6 +798,11 @@ public class Engine {
 				// var found: put value on stack
 				if (t == 3) {
 					putvar(loc);
+					continue;
+				}
+
+				if (t == 4) {
+					enter(loc + 3);
 					continue;
 				}
 			}
@@ -779,7 +864,7 @@ public class Engine {
 			s = s.replace("\\ ", " ");
 			s = s.replace("\\s", " ");
 			s = s.replace("\\n", " ");
-			Words.add(s);
+			Words.addLast(s);
 		}
 	}
 

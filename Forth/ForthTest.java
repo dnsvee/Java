@@ -14,8 +14,13 @@ public class ForthTest {
 
 		PrintStream p = System.out;
 
-		if (arg.length == 1) {
-			File f = new File(arg[0]);
+		if (arg.length > 0) {
+			File f;
+
+			if (arg.length == 2) 
+				f = new File(arg[1]);
+			else
+				f = new File(arg[0]);
 
 			String toread;
 
@@ -35,15 +40,15 @@ public class ForthTest {
 			}
 
 			try {
+				System.out.println(sb.toString());
 				E.Stack.add(sb.toString());
 				E.eval();
 			} catch (RuntimeException exp) {
-				if (f.toString().matches(".+tests$")) {
+				if (arg.length == 2 && arg[0].equals("-t")) {
 					while (E.Stack.size() != 0) {
 						boolean b = (boolean) E.Stack.pop();
-						if (!b) {
+						if (!b) 
 							System.out.println("test failed");
-						}
 					}
 				}
 			}

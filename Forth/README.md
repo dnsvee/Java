@@ -19,13 +19,6 @@ The available types in the language are double, long, string, boolean, list, map
 
 Numbers by default are double values and can be written using the syntax supported by the Double.valueOf operator described in the Java reference.
 
-Legal values are
-```
-0.01
-1
--3.14 
-```
-
 Here is a list of words that only work on numbers. Other words can also be used on numbers and will be described later.
 
 ```
@@ -84,7 +77,6 @@ over 	( a b -- a b a ) 	duplicates the object under the top element
 ```
 
 There is also a second stack. The stack notation is extended to read ( a ; c -- c ; a ). This means that the top elements from both stacks are swapped. The part before the semicolon is the main stack. The part after is the second stack.
-
 ```
 word	stack notation		explanation
 
@@ -124,22 +116,25 @@ null 	( -- a )	a:null is null value
 
 ## Lists
 
-A list, implemented using Vector is constructed like this:
+A list, implemented using Java's Stack class is constructed like this:
 ```
 ( elements... ) 
 list!
 ```
 
-The first form is a literal. Note that when the list is constructed it is reversed to match the way it is visually represented so when a list is made like ( 1 2 3 4 ) then 1 is the first element and 4 the last.
+The first form is a literal. Note that when the list is constructed using literal notation it is reversed to match the way it is visually represented so when a list is made like ( 1 2 3 4 ) then 1 is the first element and 4 the last.
 
 Words defined on lists:
 ```
 word	stack notation	explanation
 
-push	( b a --   )	push a on top of b:list
-pop	( a   -- b )	pops top element from a:list on top of stack as b:object
-at 	( b a -- c ) 	get c:value at index b:number from a:list
-set     ( c b a -- ) 	set value of index b:number in list:c to value a
+apush	( b a --   )	push b on top of a:list
+apop	( a   -- b )	pops top element from a:list on top of stack as b:object
+aget 	( b a -- c ) 	get c:value at index b:number from a:list
+aset    ( c b a -- ) 	set value of index b:number in c:list to value a
+aconcat ( b a -- b ) 	adds values of a:list to b:list 
+aclear  ( a --     )    clears a:list
+asize   ( a -- b   ) 	b:number is size of a:map
 ```
 
 ## Maps
@@ -148,36 +143,33 @@ A map is a dictionary implemented using HashMap that maps keys to values. A map 
 ```
 map!
 ```
+
 ```
 word	stack notation	explanation
 
-get 	( b a -- c ) 	get c:value from b:key in a:map
-put 	( c b a -- )    puts b:key and c:value in a:map
+mget 	( b a -- c ) 	get c:value from b:key in a:map
+mput 	( c b a -- )    puts b:key and c:value in a:map
+mclear  ( a --     )    clears a.map
+msize   ( a -- b   )    b:number is size of a:map
+mdel    ( b a --   )    removes key and value with b:key from a:map
 ```
 
 ## Set
 
-A set is implemented using HashSet and can be constructed with a constructor or a literal like this:
+A set is implemented using Java's HashSet class and can be constructed with a constructor or a literal like this:
 ```
 (+ <elements> +)
 set!
 ```
 
-## Collection words
-
-Words defined on all collection types:
-
 ```
 word	stack notation	explanation
-
-size	( a -- b   )	b is size of a:collection
-clear	( a --     ) 	removes all elements from a
-set	( a b c -- )	add pair of b:key or b:index and a:value to dictionary c
-add     ( b a -    ) 	add value b to a:collection
-has     ( b a -- c ) 	b is true or false if b is in a:collection or not
-del	( b a --   )	remove b:value from a:collection 
-union   ( b a -- b )   	adds a:collection to b:collection
+sadd	( b a --   )    adds a to b:set
+shas	( b a -- c )    c is true or false if b is in a:set or not
+sdel    ( b a --   )	removes b from a:set
+sunion  ( b a -- b )    adds values of a:set to b:set
 ```
+
 ## Variables
 
 A named variable is created like this:
@@ -200,6 +192,8 @@ Naming the variable will put it's current variable on the stack so the following
 life 
 ```
 
+Multiple variables with the same name can exist. The more recently defined variable shadows the older one.
+
 ```
 word		stack notation	explanation
 var <name> 	( a -- )	creates a named variable and initializes it with 'a'
@@ -219,8 +213,7 @@ You can call it with teh word 'call' as follows:
 [ 1 2 + ] call
 ```
 
-
-## Words for displaying words
+## IO words
 
 ```
 word	stack notation		explanation
@@ -233,6 +226,34 @@ nl      (         --   ) 	outputs newline to standard output
 space   ( 	  --   ) 	outputs a space to standard output
 ```
 
+## User defined words
+
+A named function is created as follows:
+```
+def <name>
+	<statements>
+end
+```
+
+Multiple words can have the same name. The most recently defined word shadows the older word. Words are never overwritten so when a new word is created with the same name as an older one the references to the old word still work the same as when it was created.
+
+Example:
+```
+def anumber
+	4
+end
+
+def puts_number
+	anumber puts
+end
+
+def anumber 
+	5
+end
+```
+
+The word puts_number will output 4.
+
 ## General Words
 
 Words that work on all types:
@@ -240,7 +261,7 @@ Words that work on all types:
 ```
 word	stack notation		explanation
 
-==	( a b     -- c )	c is a == b
+==	( a b     -- c )	c is a.equals(b)
 cmp    	( a b     -- c )	c is a.compareTo(b)
 class?  ( a       -- b ) 	b is the class name of a:object
 ```
