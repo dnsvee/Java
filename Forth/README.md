@@ -5,7 +5,9 @@ Attempt to create a Forth interpreter in Java. Some things work.
 Forth is a programming language with very little syntax and simple semantics. Where other languages have functions or methods Forth has words. Words use arguments amd return values by reading and writing to a globally available stack. Words don't have argument lists and return statements like in other languages. 
 
 Running a Forth command looks like this:
+```
 1 2 + puts
+```
 
 This first puts the two numbers on the stack and then it runs the '+' command. This command pops both numbers from the stack numbers and adds them together; the sum is placed on top of the stack. The 'puts' word outputs the value to standard output. 
 
