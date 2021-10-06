@@ -1,6 +1,6 @@
 # Forth interpreter
 
-Attempt to create a Forth interpreter in Java. Some things work. Lots of functionality still missing.
+Attempt to create a Forth interpreter in Java. Some things work. 
 
 Forth is a programming language with very little syntax and simple semantics. Where other languages have functions or methods Forth has words. Words use arguments amd return values by reading and writing to a globally available stack. Words don't have argument lists and return statements like in other languages. 
 
@@ -37,12 +37,7 @@ sqrt	( a   -- b )	b is sqrt(a)
 floot   ( a   -- b ) 	b is floor(a)
 min	( a b -- c ) 	c is min(a, b)
 max	( a b -- c ) 	c is max(a, b)
->	( a b -- c )    c:boolean is a > b
-<	( a b -- c )    c:boolean is a < b
->=	( a b -- c )    c:boolean is a <= b
-<=	( a b -- c )    c:boolean is a >= b
 ```
-
 
 ## Strings
 
@@ -56,10 +51,13 @@ Hello\ world!
 Line\sone\nLine\stwo\n
 ```
 
+Any object can be converted to a string.
+
 ```
 word	stack notation	explanation
 "	( -- b ) 	macro; parses a word from the input buffer and puts it on the stack
 strlen  ( a -- b ) 	b is length of a:string
+str!   	( a -- b )	b is a.toString()
 ```
 
 ## Stack ordering
@@ -153,6 +151,16 @@ mclear  ( a --     )    clears a.map
 msize   ( a -- b   )    b:number is size of a:map
 mdel    ( b a --   )    removes key and value with b:key from a:map
 ```
+
+## Pairs
+
+A pair, a collection of two objects, is created in two ways
+```
+1 one pair!
+2 two ,
+```
+
+Pairs can be compared. The comparison is done by comparing the first element of both pairs and than the second element. Pairs with the same value elements are considered equal. Pairs can be used as keys in maps.
 
 ## Set
 
@@ -261,7 +269,10 @@ Words that work on all types:
 ```
 word	stack notation		explanation
 
-==	( a b     -- c )	c is a.equals(b)
-cmp    	( a b     -- c )	c is a.compareTo(b)
 class?  ( a       -- b ) 	b is the class name of a:object
+==	( a b     -- c )	c is a.equals(b)
+>	( a b -- c )    c:boolean is a > b
+<	( a b -- c )    c:boolean is a < b
+>=	( a b -- c )    c:boolean is a <= b
+<=	( a b -- c )    c:boolean is a >= b
 ```
