@@ -102,97 +102,89 @@ public class Engine {
 
 		// ( a b -- c )    c is a + b
 		builtin("+",    (Engine E) -> {
-			Number b = (Number) Stack.pop();
-			Number a = (Number) Stack.pop();
-			Stack.add(a.doubleValue() + b.doubleValue());
+			Double b = (Double) Stack.pop();
+			Double a = (Double) Stack.pop();
+			Stack.add(a + b);
 			IP++;
 		});
 
 		// ( a b -- c )    c is a - b
 		builtin("-",    (Engine E) -> {
-			Number b = (Number) Stack.pop();
-			Number a = (Number) Stack.pop();
-			Stack.add(a.doubleValue() - b.doubleValue());
+			Double b = (Double) Stack.pop();
+			Double a = (Double) Stack.pop();
+			Stack.add(a - b);
 			IP++;
 		});
 
 		// ( a b -- c )	c is a * b
 		builtin("*",    (Engine E) -> {
-			Number b = (Number) Stack.pop();
-			Number a = (Number) Stack.pop();
-			Stack.add(a.doubleValue() * b.doubleValue());
+			Double b = (Double) Stack.pop();
+			Double a = (Double) Stack.pop();
+			Stack.add(a * b);
 			IP++;
 		});
 
 		// ( a b -- c )	c is a / b
 		builtin("/",    (Engine E) -> {
-			Number b = (Number) Stack.pop();
-			Number a = (Number) Stack.pop();
-			Stack.add(a.doubleValue() / b.doubleValue());
+			Double b = (Double) Stack.pop();
+			Double a = (Double) Stack.pop();
+			Stack.add(a / b);
 			IP++;
 		});
 
 		// ( a b -- c ) c is max(a, b)
 		builtin("max",    (Engine E) -> {
-			Number b = (Number) Stack.pop();
-			Number a = (Number) Stack.pop();
-			Stack.add(Math.max(a.doubleValue(), b.doubleValue()));
+			Double b = (Double) Stack.pop();
+			Double a = (Double) Stack.pop();
+			Stack.add(Math.max(a, b));
 			IP++;
 		});
 
 		// ( a b -- c ) c is min(a, b)
 		builtin("min",    (Engine E) -> {
-			Number b = (Number) Stack.pop();
-			Number a = (Number) Stack.pop();
-			Stack.add(Math.min(a.doubleValue(), b.doubleValue()));
+			Double b = (Double) Stack.pop();
+			Double a = (Double) Stack.pop();
+			Stack.add(Math.min(a, b));
 			IP++;
 		});
 
 		// ( a b -- c ) c is pow(a, b)
-		builtin("**",    (Engine E) -> {
-			Number b = (Number) Stack.pop();
-			Number a = (Number) Stack.pop();
-			Stack.add(Math.pow(a.doubleValue(), b.doubleValue()));
+		builtin("pow",    (Engine E) -> {
+			Double b = (Double) Stack.pop();
+			Double a = (Double) Stack.pop();
+			Stack.add(Math.pow(a, b));
 			IP++;
 		});
 
 		// ( a b -- c) c is a > b
 		builtin(">",    (Engine E) -> {
-			Number b = (Number) Stack.pop();
-			Number a = (Number) Stack.pop();
-			Stack.add(a.doubleValue() > b.doubleValue());
+			Comparable b = (Comparable) Stack.pop();
+			Comparable a = (Comparable) Stack.pop();
+			Stack.add(a.compareTo(b) > 0);
 			IP++;
 		});
 
 		// ( a b -- c) c is a >= b
 		builtin(">=",    (Engine E) -> {
-			Number b = (Number) Stack.pop();
-			Number a = (Number) Stack.pop();
-			Stack.add(a.doubleValue() >= b.doubleValue());
+			Comparable b = (Comparable) Stack.pop();
+			Comparable a = (Comparable) Stack.pop();
+			Stack.add(a.compareTo(b) >= 0);
 			IP++;
 		});
 
 		// ( a b -- c) c is a < b
 		builtin("<",    (Engine E) -> {
-			Number b = (Number) Stack.pop();
-			Number a = (Number) Stack.pop();
-			Stack.add(a.doubleValue() < b.doubleValue());
+			Comparable b = (Comparable) Stack.pop();
+			Comparable a = (Comparable) Stack.pop();
+			Stack.add(a.compareTo(b) < 0);
 			IP++;
 		});
 
 		// ( a b -- c) c is a <= b
 		builtin("<=",    (Engine E) -> {
-			Number b = (Number) Stack.pop();
-			Number a = (Number) Stack.pop();
-			Stack.add(a.doubleValue() <= b.doubleValue());
-			IP++;
-		});
-
-		// ( a b -- c) c is a.compareTo(b)
-		builtin("cmp",    (Engine E) -> {
 			Comparable b = (Comparable) Stack.pop();
 			Comparable a = (Comparable) Stack.pop();
-			Stack.add(a.compareTo(b));
+			Stack.add(a.compareTo(b) <= 0);
 			IP++;
 		});
 
@@ -204,59 +196,64 @@ public class Engine {
 			IP++;
 		});
 
+		macro("!=", (Engine E) -> {
+			compile("==");
+			compile("not");
+		});
+
 		// ( a -- b ) b is sqrt(a)
 		builtin("sqrt",    (Engine E) -> {
-			Number a = (Number) Stack.pop();
-			Stack.add(Math.sqrt(a.doubleValue()));
+			Double a = (Double) Stack.pop();
+			Stack.add(Math.sqrt(a));
 			IP++;
 		});
 
 		// ( a -- b ) b is abs(a)
 		builtin("abs",    (Engine E) -> {
-			Number a = (Number) Stack.pop();
-			Stack.add(Math.abs(a.doubleValue()));
+			Double a = (Double) Stack.pop();
+			Stack.add(Math.abs(a));
 			IP++;
 		});
 
 		// ( a b -- c )	c is cos(a)
 		builtin("cos",    (Engine E) -> {
-			Number a = (Number) Stack.pop();
-			Stack.add(Math.cos(a.doubleValue()));
+			Double a = (Double) Stack.pop();
+			Stack.add(Math.cos(a));
 			IP++;
 		});
 
 		// ( a b -- c )	c is sin(a)
 		builtin("sin",    (Engine E) -> {
-			Number a = (Number) Stack.pop();
-			Stack.add(Math.sin(a.doubleValue()));
+			Double a = (Double) Stack.pop();
+			Stack.add(Math.sin(a));
 			IP++;
 		});
 
 		// ( a b -- c )	c is tan(a)
 		builtin("tan",    (Engine E) -> {
-			Number a = (Number) Stack.pop();
-			Stack.add(Math.tan(a.doubleValue()));
+			Double a = (Double) Stack.pop();
+			Stack.add(Math.tan(a));
 			IP++;
 		});
 
 		// ( a -- b ) b is log(a)
 		builtin("log",    (Engine E) -> {
-			Number a = (Number) Stack.pop();
-			Stack.add(Math.log(a.doubleValue()));
+			Double a = (Double) Stack.pop();
+			Stack.add(Math.log(a));
 			IP++;
 		});
 
 		// ( a -- b ) b is floor(a)
 		builtin("floor",    (Engine E) -> {
-			Number a = (Number) Stack.pop();
-			Stack.add(Math.floor(a.doubleValue()));
+			Double a = (Double) Stack.pop();
+			Stack.add(Math.floor(a));
 			IP++;
 		});
 
 		// formats stack elements as a string using String.format
 		builtin("fmt",    (Engine E) -> {
 			String a = (String) Stack.pop();
-			int sz = ((Number) Stack.pop()).intValue(); // numer of elements to format
+			int sz = ((Double) Stack.pop()).intValue(); // numer of elements to format
 			Object[] arr = Stack.subList(Stack.size() - sz, Stack.size()).toArray();
 
 			for(int i = 0; i < sz; i++)
@@ -265,6 +262,12 @@ public class Engine {
 			Stack.add(String.format(a, arr));
 			IP++;
 		});
+
+		builtin("str!",    (Engine E) -> {
+			Stack.add(Stack.pop().toString());
+			IP++;
+		});
+
 
 		// sets named variable with value from stack
 		macro("!", (Engine E) -> {
@@ -404,6 +407,43 @@ public class Engine {
 			IP++;
 		});
 
+		builtin("->",    (Engine E) -> {
+			Second.push(Stack.pop());
+			IP++;
+		});
+
+		// #2 $3
+		builtin("<-",    (Engine E) -> {
+			Stack.push(Second.pop());
+			IP++;
+		});
+
+		builtin("<--",    (Engine E) -> {
+			Stack.push(Second.pop());
+			Stack.push(Second.pop());
+			IP++;
+		});
+
+		builtin("-->",    (Engine E) -> {
+			Second.push(Stack.pop());
+			Second.push(Stack.pop());
+			IP++;
+		});
+
+		builtin("--->",    (Engine E) -> {
+			Second.push(Stack.pop());
+			Second.push(Stack.pop());
+			Second.push(Stack.pop());
+			IP++;
+		});
+
+		builtin("<---",    (Engine E) -> {
+			Stack.push(Second.pop());
+			Stack.push(Second.pop());
+			Stack.push(Second.pop());
+			IP++;
+		});
+
 		// bring back from second stack
 		builtin("lower",    (Engine E) -> {
 			Stack.push(Second.pop());
@@ -494,9 +534,20 @@ public class Engine {
 		});
 
 		// get from map
+		builtin("mget*",    (Engine E) -> {
+			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
+			Object a = o.get(Stack.pop());
+			if (a != null) {
+				Stack.pop();
+				Stack.push(a);
+			}
+			IP++;
+		});
+
 		builtin("mget",    (Engine E) -> {
 			HashMap<Object, Object> o = (HashMap<Object, Object>) Stack.pop();
-			Stack.push(o.get(Stack.pop()));
+			Object a = o.get(Stack.pop());
+			Stack.push(a);
 			IP++;
 		});
 
@@ -510,7 +561,7 @@ public class Engine {
 		// lset 
 		builtin("aset",    (Engine E) -> {
 			Stack<Object> o = (Stack<Object>) Stack.pop();
-			o.set((Integer) Stack.pop(), Stack.pop() );
+			o.set(((Double) Stack.pop()).intValue(), Stack.pop() );
 			IP++;
 		});
 
@@ -597,7 +648,7 @@ public class Engine {
 
 		// Size of collection
 		builtin("size",    (Engine E) -> {
-			Stack.push(((Collection) Stack.pop()).size());
+			Stack.push((double) ((Collection) Stack.pop()).size());
 			IP++;
 		});
 
@@ -606,7 +657,7 @@ public class Engine {
 
 		builtin("msize", (Engine E) -> {
 			HashMap<Object, Object> m = (HashMap) Stack.pop();
-			Stack.push(m.size());
+			Stack.push((double) m.size());
 			IP++;
 		});
 
@@ -701,6 +752,99 @@ public class Engine {
 			Stack.push(!((Boolean) Stack.pop()));
 			IP++;
 		});
+
+		builtin("pair!", (Engine) -> {
+			Pair p = new Pair(Stack.pop(), Stack.pop());
+			Stack.push(p);
+			IP++;
+		});
+
+		macro(",", (Engine E) -> {
+			compile("pair!");
+		});
+
+		builtin("**", (Engine) -> {
+			Pair p = (Pair) Stack.pop();
+			Stack.push(p.first);
+			Stack.push(p.second);
+			IP++;
+		});
+
+		builtin("matches", (Engine) -> {
+			Pattern p = Pattern.compile((String) Stack.pop());
+			Matcher m = p.matcher((String) Stack.pop());
+			boolean b = m.matches();
+
+			for(int i = 1; i <= m.groupCount(); i++) 
+				Stack.push(m.group(i));
+
+			Stack.push(b);
+			IP++;
+		});
+	}
+
+	class Pair implements Comparable<Object> {
+		public Comparable first;
+		public Comparable second;
+
+		Pair(Object b, Object a) {
+			first = (Comparable) a;
+			second = (Comparable) b;
+		}
+
+		public int compareTo(Object o) {
+			if (getClass() != o.getClass()) {
+				int h1 = hashCode();
+				int h2 = o.hashCode();				
+
+				if (h1 < h2) return -1;
+				if (h1 > h2) return 1;
+				if (h1 == h2) return 0;
+			}
+
+			Pair p = (Pair) o;
+
+			int a = ((Comparable) first).compareTo(p.first);
+
+			if (a < 0)
+				return -1;
+
+			if (a > 0)
+				return 1;
+
+			int b = ((Comparable) second).compareTo(p.second);
+
+			if (b < 0)
+				return -1;
+
+			if (b > 0)
+				return 1;
+
+			return 0;
+		}
+
+		public boolean equals(Object o) {
+			if (o == this)
+				return true;
+
+			if (o == null)
+				return true;
+
+			if (o.getClass() != getClass()) 
+				return false;
+
+			Pair p = (Pair) o;
+
+			return first.equals(p.first) && second.equals(p.second);
+		}
+
+		public int hashCode() {
+			return Objects.hash(first, second);
+		}
+
+		public String toString() {
+			return "(" + first.toString() + ", " + second.toString() + ")";
+		}
 	}
 
 	// compiles word that jumps to first instruction of a word
@@ -839,7 +983,7 @@ public class Engine {
 			try {
 				// try to parse as integer
 				Integer i = Integer.parseInt(s);
-				literal(i);
+				literal(i.doubleValue());
 				continue;
 			} catch (NumberFormatException err) {}
 
@@ -893,7 +1037,10 @@ public class Engine {
 			s = s.replace("\\ ", " ");
 			s = s.replace("\\s", " ");
 			s = s.replace("\\n", " ");
-			Words.addLast(s);
+			s = s.trim();
+			if (s.length() > 0) {
+				Words.addLast(s);
+			}
 		}
 	}
 
