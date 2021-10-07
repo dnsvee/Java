@@ -43,6 +43,11 @@ public class Engine {
 	// address of last compiled word
 	public int                 top;
 
+	public boolean approx(double a, double b) {
+		double epsilon = 0.000001;
+		return Math.abs(a - b) <= ( (Math.abs(a) < Math.abs(b) ? Math.abs(b) : Math.abs(a)) * epsilon);
+	}
+
 	// constructor
 	public Engine() {
 		Dict  = new Stack();
@@ -53,7 +58,6 @@ public class Engine {
 		IP    = 0;
 
 		top   = -1;
-
 
 		RuntimeException done = new RuntimeException();
 
@@ -96,7 +100,7 @@ public class Engine {
 
 		// ( a -- b ) b is length of a:string
 		builtin("strlen", (Engine E) -> { 
-			Stack.push(((String) Stack.pop()).length());
+			Stack.push((double) ((String) Stack.pop()).length());
 			IP++;
 		});
 
@@ -402,56 +406,19 @@ public class Engine {
 		});
 
 		// move to second stack
-		builtin("raise",    (Engine E) -> {
+		builtin("toss",    (Engine E) -> {
 			Second.push(Stack.pop());
 			IP++;
 		});
 
-		builtin("->",    (Engine E) -> {
-			Second.push(Stack.pop());
-			IP++;
-		});
-
-		// #2 $3
-		builtin("<-",    (Engine E) -> {
-			Stack.push(Second.pop());
-			IP++;
-		});
-
-		builtin("<--",    (Engine E) -> {
-			Stack.push(Second.pop());
-			Stack.push(Second.pop());
-			IP++;
-		});
-
-		builtin("-->",    (Engine E) -> {
-			Second.push(Stack.pop());
-			Second.push(Stack.pop());
-			IP++;
-		});
-
-		builtin("--->",    (Engine E) -> {
-			Second.push(Stack.pop());
-			Second.push(Stack.pop());
-			Second.push(Stack.pop());
-			IP++;
-		});
-
-		builtin("<---",    (Engine E) -> {
-			Stack.push(Second.pop());
-			Stack.push(Second.pop());
-			Stack.push(Second.pop());
-			IP++;
-		});
-
-		// bring back from second stack
-		builtin("lower",    (Engine E) -> {
+		// grab from second stack
+		builtin("grab",    (Engine E) -> {
 			Stack.push(Second.pop());
 			IP++;
 		});
 
 		// rotate top of both stacks
-		builtin("twirl",    (Engine) -> {
+		builtin("flip",    (Engine) -> {
 			Object o = Stack.pop();
 			Stack.push(Second.pop());
 			Second.push(o);
@@ -781,6 +748,7 @@ public class Engine {
 			Stack.push(b);
 			IP++;
 		});
+
 	}
 
 	class Pair implements Comparable<Object> {
@@ -1033,13 +1001,16 @@ public class Engine {
 	// space is the used delimiter except when preceded by a backlash
 	// replace \s, \<space> and \n escape sequences
 	public void preparse() {
-		for(String s : ((String) Stack.pop()).split("(?<!\\\\)\\s+")) {
-			s = s.replace("\\ ", " ");
-			s = s.replace("\\s", " ");
-			s = s.replace("\\n", " ");
-			s = s.trim();
-			if (s.length() > 0) {
-				Words.addLast(s);
+		for(String l : ((String) Stack.pop()).split("\\n")) {
+			l = l.split("^#|\\s#")[0]; // delete 
+			for(String s : l.split("(?<!\\\\)\\s+")) {
+				s = s.replace("\\ ", " ");
+				s = s.replace("\\s", " ");
+				s = s.replace("\\n", " ");
+				s = s.trim();
+
+				if (s.length() > 0) 
+					Words.addLast(s);
 			}
 		}
 	}
