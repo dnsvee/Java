@@ -1,23 +1,25 @@
 # Forth interpreter
 
-Attempt to create a Forth interpreter in Java. Some things work. Lots of functionality still missing.
+Attempt to create a Forth interpreter in Java. Some things work. 
 
 Forth is a programming language with very little syntax and simple semantics. Where other languages have functions or methods Forth has words. Words use arguments amd return values by reading and writing to a globally available stack. Words don't have argument lists and return statements like in other languages. 
 
 Running a Forth command looks like this:
+```
 1 2 + puts
+```
 
-This first puts the two numbers on the stack and then it runs the '+' command. This command pops both numbers from the stack numbers and adds them together; the sum is placed on top of the stack. The 'puts' word outputs the value to standard output. 
+This first puts the two numbers on the stack and then it runs the '+' command. This command pops both numbers from the stack and adds them together; the sum is placed back on top of the stack. The 'puts' word outputs the value to standard output. 
 
-To describe for each word what type of elements it consumes from the stack and what values it pushes back on the stack; and in what representation called stack notation will be used. So for the word '+' which sums numbers the following stack notation is used: ( a b -- c ) where a, b are numbers and c is the result of adding a and b. The part before the dashes is the state of the stack before calling the word where 'b' is top of the stack and 'a' is below it. The part after the dashes is the description of top of the stack of the elements put their by the word.
+To describe for each word what type of elements it consumes from the stack and what values it pushes back on the stack, and in what order, a visual representation called stack notation will be used. So for the word '+' which sums numbers the following stack notation is used: ( b a -- c ) where a, b are numbers and c is the result of adding a and b. The part before the dashes is the state of the stack before calling the word where 'a' is top of the stack and 'b' is below it. The part after the dashes is the description of top of the stack of the elements after the word has executed. 
 
 This interpreter also has available a second stack for use.
 
-The available types in the language are double, long, string, boolean, list, map, set.
+The available types in this language are double, string, boolean, list, map, set, null, pair.
 
 ## Numbers
 
-Numbers by default are double values and can be written using the syntax supported by the Double.valueOf operator described in the Java reference.
+Numbers are double values and can be written using the syntax supported by the Double.valueOf operator described in the Java reference.
 
 Here is a list of words that only work on numbers. Other words can also be used on numbers and will be described later.
 
@@ -37,16 +39,11 @@ sqrt	( a   -- b )	b is sqrt(a)
 floot   ( a   -- b ) 	b is floor(a)
 min	( a b -- c ) 	c is min(a, b)
 max	( a b -- c ) 	c is max(a, b)
->	( a b -- c )    c:boolean is a > b
-<	( a b -- c )    c:boolean is a < b
->=	( a b -- c )    c:boolean is a <= b
-<=	( a b -- c )    c:boolean is a >= b
 ```
-
 
 ## Strings
 
-If Forth does not recognize a word it will consider it a string literal. The (macro) word " will treat the next word as a string literal. Strings can have embedded spaces in them prefaced with a backslash. Strings support the escape sequences \s and \n.
+If Forth does not recognize a word it will consider it a string literal. The word " will treat the next word as a string literal. Strings also can have embedded spaces in them prefaced with a backslash. Strings support the escape sequences \s and \n.
 
 These are all valid strings:
 ```
@@ -56,31 +53,34 @@ Hello\ world!
 Line\sone\nLine\stwo\n
 ```
 
+Any object can be converted to a string using 'str!'.
+
 ```
 word	stack notation	explanation
-"	( -- b ) 	macro; parses a word from the input buffer and puts it on the stack
+"	( -- b ) 	parses word following it and treats it as a string literal
 strlen  ( a -- b ) 	b is length of a:string
+str!   	( a -- b )	b is a.toString()
 ```
 
 ## Stack ordering
 
-Objects on the stack can be rearranged if necessary. Sometimes the order of tack elements must be reordered to accomadate a word.
+Objects on the stack can be rearranged if necessary. Sometimes the order of stack elements must be reordered to accommodate a word.
 
 ```
 word	stack notation		explanation
 
 dup 	( a   -- a a   )	duplicates the top word
-swap 	( a b -- b a   )	swaps the top two words
+swap 	( b a -- a b   )	swaps the top two words
 drop 	( a   --       )	pops the top element
-nip  	( a b -- b     )    	drops the element below the top element
-over 	( a b -- a b a ) 	duplicates the object under the top element
+nip  	( b a -- a     )    	drops the element below the top element
+over 	( b a -- b a b ) 	duplicates the object under the top element
 ```
 
 There is also a second stack. The stack notation is extended to read ( a ; c -- c ; a ). This means that the top elements from both stacks are swapped. The part before the semicolon is the main stack. The part after is the second stack.
 ```
 word	stack notation		explanation
 
-twirl	( a ; b -- b ; a )	swaps top element of both stack
+flip    ( a ; b -- b ; a )	swaps top element of both stack
 raise 	( a ;   -- ; a )	moves element from main to second stack
 lower	( ; a   -- a ; ) 	moves element from second to main stack
 ```
@@ -99,7 +99,7 @@ The if consumes the boolean on the top of the stack.
 
 The while or for loop construct found in other languages is implemented like this:
 ```
-do <executes and leaves a boolean on top of stack> while <executes once when true> repeat
+do <statements that should leave a boolean on top of stack> while <staments that execute once> repeat
 ```
 
 While consumes the boolean on the top of the stack.
@@ -131,10 +131,10 @@ word	stack notation	explanation
 apush	( b a --   )	push b on top of a:list
 apop	( a   -- b )	pops top element from a:list on top of stack as b:object
 aget 	( b a -- c ) 	get c:value at index b:number from a:list
-aset    ( c b a -- ) 	set value of index b:number in c:list to value a
-aconcat ( b a -- b ) 	adds values of a:list to b:list 
+aset    ( c b a -- ) 	set value of index b:number in a:list to value c
+aconcat ( b a -- a ) 	adds values of b:list to a:list 
 aclear  ( a --     )    clears a:list
-asize   ( a -- b   ) 	b:number is size of a:map
+asize   ( a -- b   ) 	b:number is size of a:list
 ```
 
 ## Maps
@@ -148,11 +148,22 @@ map!
 word	stack notation	explanation
 
 mget 	( b a -- c ) 	get c:value from b:key in a:map
+mget* 	( c b a -- d ) 	if b:key in a:map than d is value associated with b:key, otherwise d is the same as c
 mput 	( c b a -- )    puts b:key and c:value in a:map
-mclear  ( a --     )    clears a.map
+mclear  ( a --     )    clears a:map
 msize   ( a -- b   )    b:number is size of a:map
 mdel    ( b a --   )    removes key and value with b:key from a:map
 ```
+
+## Pairs
+
+A pair, a collection of two objects, is created in two ways
+```
+1 one pair!
+2 two ,
+```
+
+Pairs can be compared. The comparison is done by comparing the first element of both pairs and than the second element. Pairs with the same value elements are considered equal. Pairs can be used as keys in maps.
 
 ## Set
 
@@ -167,7 +178,7 @@ word	stack notation	explanation
 sadd	( b a --   )    adds a to b:set
 shas	( b a -- c )    c is true or false if b is in a:set or not
 sdel    ( b a --   )	removes b from a:set
-sunion  ( b a -- b )    adds values of a:set to b:set
+sunion  ( b a -- b )    adds values of b:set to a:set
 ```
 
 ## Variables
@@ -208,7 +219,7 @@ You can group statements togetehr in a lambda as follows:
 [ ... ] statements
 ```
 
-You can call it with teh word 'call' as follows:
+You can call it with the word 'call' as follows:
 ```
 [ 1 2 + ] call
 ```
@@ -218,8 +229,8 @@ You can call it with teh word 'call' as follows:
 ```
 word	stack notation		explanation
 
-putnl   ( a       --   )	outputs element a followed by a newline to standard output
-puts    ( a       --   ) 	outputs element a to standard output
+putnl   ( a       --   )	outputs a followed by a newline to standard output
+puts    ( a       --   ) 	outputs a to standard output
 fmt     ( ... a b -- c ) 	... is a list of elements of size a:number and b is a format string
 		 		c is the result of formatting using String.format 
 nl      (         --   ) 	outputs newline to standard output
@@ -235,7 +246,7 @@ def <name>
 end
 ```
 
-Multiple words can have the same name. The most recently defined word shadows the older word. Words are never overwritten so when a new word is created with the same name as an older one the references to the old word still work the same as when it was created.
+Multiple words can have the same name. The most recently defined word shadows the older word. Words are never overwritten so when a new word is created with the same name as an older one the references to the old word still point to the previous definition.
 
 Example:
 ```
@@ -261,7 +272,10 @@ Words that work on all types:
 ```
 word	stack notation		explanation
 
-==	( a b     -- c )	c is a.equals(b)
-cmp    	( a b     -- c )	c is a.compareTo(b)
 class?  ( a       -- b ) 	b is the class name of a:object
+==	( a b     -- c )	c is a.equals(b)
+>	( a b -- c )    c:boolean is a > b
+<	( a b -- c )    c:boolean is a < b
+>=	( a b -- c )    c:boolean is a <= b
+<=	( a b -- c )    c:boolean is a >= b
 ```
