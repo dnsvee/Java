@@ -104,6 +104,27 @@ public class Engine {
 			IP++;
 		});
 
+		// ( b a -- ... ) split b:string using a:regex; ... are substrings
+		builtin("split", (Engine E) -> { 
+			String r = (String) Stack.pop();
+			String s = (String) Stack.pop();
+			String a[] = s.split(r);
+			if (a != null) {
+				for(int i = 0; i < a.length; i++) {
+					Stack.push(a[i]);
+				}
+			}
+			IP++;
+		});
+
+		// ( b a -- c ) c:string is b:string + a:string
+		builtin("..", (Engine E) -> { 
+			String s1 = (String) Stack.pop();
+			String s0 = (String) Stack.pop();
+			Stack.push(s0 + s1);
+			IP++;
+		});
+
 		// ( a b -- c )    c is a + b
 		builtin("+",    (Engine E) -> {
 			Double b = (Double) Stack.pop();
@@ -257,13 +278,18 @@ public class Engine {
 		// formats stack elements as a string using String.format
 		builtin("fmt",    (Engine E) -> {
 			String a = (String) Stack.pop();
-			int sz = ((Double) Stack.pop()).intValue(); // numer of elements to format
-			Object[] arr = Stack.subList(Stack.size() - sz, Stack.size()).toArray();
+			int sz = 0;
+			for(int i = 0; i < a.length(); i++) 
+				if (a.charAt(i) == '%') 
+					sz++;
 
+			Object[] arr = new Object[sz];
+			
 			for(int i = 0; i < sz; i++)
-				Stack.pop();
+				arr[sz - i - 1] = Stack.pop();
 
 			Stack.add(String.format(a, arr));
+
 			IP++;
 		});
 
@@ -957,8 +983,8 @@ public class Engine {
 
 			try {
 				// try to parse as float
-				Float f = Float.parseFloat(s);
-				literal(f);
+				Double d = Double.parseDouble(s);
+				literal(d);
 				continue;
 			} catch (NumberFormatException err2) {}
 			
@@ -1005,7 +1031,6 @@ public class Engine {
 			l = l.split("^#|\\s#")[0]; // delete 
 			for(String s : l.split("(?<!\\\\)\\s+")) {
 				s = s.replace("\\ ", " ");
-				s = s.replace("\\s", " ");
 				s = s.replace("\\n", " ");
 				s = s.trim();
 
