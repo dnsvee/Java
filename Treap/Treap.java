@@ -18,8 +18,8 @@ import java.util.Collection;
 // a treap; a datastructure that combines a binary heap and a tree
 // it's an alternative to a traditional red/black or AVL tree
 // tree remains balanced by assigning a random number to each node and
-// making sure higher random values dominate nodes with lower values
-// is balanced with approx.
+// making sure nodes with higher random values dominate nodes with lower values
+// is not perfectly balanced
 public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K> {
 
 	// used for generating random priorities
