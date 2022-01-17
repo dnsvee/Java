@@ -281,3 +281,9 @@ class?  ( a       -- b ) 	b is the class name of a:object
 ```
 
 ## Files in repo
+
+Tester.java runs a special test program on the input file. It will run each line in file separately and if it finds a value on the stack that's not true it will treat this line as a test failure. tests.fth contains some test cases
+
+Interp.java is the interactive interpreter for the Forth engine. Each input line will be executed. An empty input line will exit the program.
+
+RunScript.java runs the file provided as the first argument.
