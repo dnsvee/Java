@@ -2,20 +2,20 @@
 
 Attempt to create a Forth interpreter in Java. Some things work. 
 
-Forth is a programming language with very little syntax and simple semantics. Where other languages have functions or methods Forth has words. Words use arguments amd return values by reading and writing to a globally available stack. Words don't have argument lists and return statements like in other languages. 
+Forth is a programming language with very little syntax and simple semantics. Where other languages have functions or methods Forth has words. Instead of function paramaters and return values Forth words reading from and write to globally available FIFO stack. Every word uses the same stack for interoperatibility. 
 
 Running a Forth command looks like this:
 ```
 1 2 + puts
 ```
 
-This first puts the two numbers on the stack and then it runs the '+' command. This command pops both numbers from the stack and adds them together; the sum is placed back on top of the stack. The 'puts' word outputs the value to standard output. 
+The first two numbers are put on the stack and then it runs the '+' command. This command pops both numbers from the stack and adds them together; the sum is placed back on top of the stack. The 'puts' word outputs the value to standard output. 
 
-To describe for each word what type of elements it consumes from the stack and what values it pushes back on the stack, and in what order, a visual representation called stack notation will be used. So for the word '+' which sums numbers the following stack notation is used: ( b a -- c ) where a, b are numbers and c is the result of adding a and b. The part before the dashes is the state of the stack before calling the word where 'a' is top of the stack and 'b' is below it. The part after the dashes is the description of top of the stack of the elements after the word has executed. 
+To describe for each word what type of elements it consumes from the stack and what values it pushes back on the stack, and in what order, a visual representation called stack notation will be used. So for the word '+' which sums numbers the following stack notation is used: ( b a -- c ) where a, b are numbers and c is the result of adding a and b. The part before the dashes is the state of the stack before calling the word where 'a' is top of the stack and 'b' is below it. The part after the dashes is the description of the top of the stack after the word has executed. 
 
 This interpreter also has available a second stack for use.
 
-The available types in this language are double, string, boolean, list, map, set, null, pair.
+The available types in this language are double, string, boolean, list, map, set, null, pair. And are almost identical to their Java counterparts.
 
 ## Numbers
 
@@ -93,13 +93,13 @@ The if/then/else construct found in other languages is implemented like this:
 <boolean> if <execute when true> else <execute when false> then
 ```
 
-The if consumes the boolean on the top of the stack.
+The `if` consumes the boolean on the top of the stack.
 
 ## Looping
 
 The while or for loop construct found in other languages is implemented like this:
 ```
-do <statements that should leave a boolean on top of stack> while <staments that execute once> repeat
+do <statements that should leave a boolean on top of stack> while <statements that execute once> repeat
 ```
 
 While consumes the boolean on the top of the stack.
@@ -122,7 +122,7 @@ A list, implemented using Java's Stack class is constructed like this:
 list!
 ```
 
-The first form is a literal. Note that when the list is constructed using literal notation it is reversed to match the way it is visually represented so when a list is made like ( 1 2 3 4 ) then 1 is the first element and 4 the last.
+The first form is a literal. Note that when the list is constructed using literal notation it is reversed to match the way it is visually represented so when a list is made like ( 1 2 3 4 ) then `1` is the first element and `4` the last.
 
 Words defined on lists:
 ```
@@ -197,7 +197,7 @@ Setting the variable with a new value is done like this:
 <new value> ! <name of variable>
 ```
 
-Naming the variable will put it's current variable on the stack so the following will put the value 42 on the stack.
+Naming the variable will put it's current value on the stack so the following will put the value 42 on the stack.
 ```
 42 var life 
 life 
@@ -214,7 +214,7 @@ var <name> 	( a -- )	creates a named variable and initializes it with 'a'
 
 ## Lambdas
 
-You can group statements togetehr in a lambda as follows:
+You can group statements together in a lambda as follows:
 ```
 [ ... ] statements
 ```
@@ -274,8 +274,8 @@ word	stack notation		explanation
 
 class?  ( a       -- b ) 	b is the class name of a:object
 ==	( a b     -- c )	c is a.equals(b)
->	( a b -- c )    c:boolean is a > b
-<	( a b -- c )    c:boolean is a < b
->=	( a b -- c )    c:boolean is a <= b
-<=	( a b -- c )    c:boolean is a >= b
+>	( a b -- c )    	c:boolean is a > b
+<	( a b -- c )    	c:boolean is a < b
+>=	( a b -- c )    	c:boolean is a <= b
+<=	( a b -- c )   	 	c:boolean is a >= b
 ```
