@@ -10,4 +10,4 @@ A treap is a tree data structure that uses randomness to maintain a reasonanle b
 
 ## Some tasks from rosettacode
 
-Doesnt not contain much at the moment
+Does not contain much of note at the moment
