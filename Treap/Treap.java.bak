@@ -15,17 +15,11 @@ import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.Collection;
 
-// a TREAP; a tree datastructure
-
-// This one implements some set functionality
-
-// It's an alternative to a traditional red/black or AVL tree
-
-// The tree remains balanced by assigning a random number to each node and
-// making sure nodes with higher values (priority) are closer to the root than nodes
-// with lower values (priority)
-
-
+// a treap; a datastructure that combines a binary heap and a tree
+// it's an alternative to a traditional red/black or AVL tree
+// tree remains balanced by assigning a random number to each node and
+// making sure nodes with higher random values dominate nodes with lower values
+// is not perfectly balanced
 public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K> {
 
 	// used for generating random priorities
