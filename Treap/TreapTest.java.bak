@@ -146,7 +146,7 @@ public class TreapTest {
 
 			Clock c = new Clock();
 
-			// add and remove 1000 random words from TreeSet
+			// add nd remove from TreeSet
 			c.start();
 			ts.addAll(ws);
 
