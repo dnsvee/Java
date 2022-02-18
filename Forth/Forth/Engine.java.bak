@@ -787,7 +787,6 @@ public class Engine {
 
 	}
 
-	// a pair class
 	class Pair implements Comparable<Object> {
 		public Comparable first;
 		public Comparable second;
@@ -797,7 +796,6 @@ public class Engine {
 			second = (Comparable) b;
 		}
 
-		// compares pairs as equal if both elements are the same
 		public int compareTo(Object o) {
 			if (getClass() != o.getClass()) {
 				int h1 = hashCode();
@@ -853,7 +851,7 @@ public class Engine {
 		}
 	}
 
-	// compiles a word into the dictionary that jumps to the first instruction of a word
+	// compiles word that jumps to first instruction of a word
 	public void enter(int loc) {
 		Dict.push((Consumer<Engine>) (Engine) -> {
 			Trail[++iTrail] = IP + 1;
@@ -861,34 +859,28 @@ public class Engine {
 		});
 	}
 
-	// compiles a jump instruction that jumps to a set location
 	Consumer<Engine> compile_jump(int loc) {
 		return (Consumer<Engine>) (Engine) -> {
 			IP = loc;
 		};
 	}
 
-	// Compiles a word in the dictionary
-	// First push the name of word to the dictionary
-	// Then push the type of word to the dictionary
-	// 	type 1 == builtin
-	// 	type 2 == macro
-	// 	type 3 == variable
-	// 	type 4 == user defined
-	// 	type
-	// Push the index of the previous word
-	// Push the Consumer object that implements the word
-	// Adjust pointer 'top' to point at this word
-	// TODO: add help string
+	// compiles a word
+	// first push name of word in dictionary
+	// push a number for the type of word
+	// push the index of the previous word
+	// push the Consumer object that implements the word
+	// adjust pointer 'top' to point at this word
+	// fix: add help string
 	public void compile(String s, Consumer<Engine> c, int type) {
 		Dict.add(s);
-		Dict.add(type);   
+		Dict.add(type);   // 1 bultin, 2 macro, 3 variable, 4 user defined
 		Dict.add(top);
 		Dict.add(c);
 		top = Dict.size() - 4;
 	}
 
-	// Compile a literal (string or number)
+	// compile a literal word 
 	public void literal(Object o) {
 		Dict.push((Consumer<Engine>) (Engine) -> {
 			Stack.push(o);
@@ -926,7 +918,8 @@ public class Engine {
 		return -1;
 	}
 
-	// compiles word that pushes object unto stack which is at location 'l' in the dictionary	
+	// compiles word that pushes object stored at variable at klocation 'l'
+	// to the stack
 	public void putvar(int l) {
 		Dict.push((Consumer<Engine>) (Engine) -> {
 			Stack.push(Dict.get(l + 3));
@@ -943,7 +936,7 @@ public class Engine {
 		Dict.push(Dict.get(loc + 3));
 	}
 
-	// compile all definitions in the input buffer and runs all the top level words
+	// compile all words in the input buffer and run the result
 	public void eval() {
 		preparse();
 
@@ -964,25 +957,26 @@ public class Engine {
 				// word found; do something depending on type
 				Integer t = (Integer) Dict.get(loc + 1);
 
-				// words is a builtin				
+				// 1 == builtin; compile th eConsumer object to the dictionary
+				// compiles into current word
 				if (t == 1) {
 					Dict.push(Dict.get(loc + 3));
 					continue;
 				}
 
-				// word is a macro; don't compile but run the word				
+				// 2 == macro; runs the Consumer object
 				if (t == 2) {
 					((Consumer<Engine>) Dict.get(loc + 3)).accept(this);
 					continue;
 				}
 
-				// word is a named variable; push value unto stack				
+				// 3 == var; puts value of var at current location
 				if (t == 3) {
 					putvar(loc);
 					continue;
 				}
 
-				// word is user defined name; compile an enter instruction
+				// 4 == user defined word; compile an enter instruction
 				if (t == 4) {
 					enter(loc + 3);
 					continue;
@@ -1008,10 +1002,8 @@ public class Engine {
 			literal(s);
 		}
 
-		// after input buffer is parsed and all the words are compiled
-		// run the top-level words in the buffer 
-		
-		// return to previous address; eval can be called from Forth itself
+		// after input buffer is compiler and all the words compiled at top-level are run
+		// return to previous calling word
 		leave();
 
 		// execute from the place where compiling started and run until exception thrown
@@ -1042,7 +1034,7 @@ public class Engine {
 	}
 
 	// split input buffer into seperate words 
-	// space is the used as a elimiter except when preceded by a backlash
+	// space is the used delimiter except when preceded by a backlash
 	// replace \s, \<space> and \n escape sequences
 	public void preparse() {
 		for(String l : ((String) Stack.pop()).split("\\n")) {
