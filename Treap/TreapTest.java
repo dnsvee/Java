@@ -37,9 +37,10 @@ public class TreapTest {
 	}
 
 	public static void test1() {
+		// some tests
+		
 		Treap<Integer> t = new Treap<>();
-		System.out.println("Doing some tests on the Treap.java class");
-
+		
 		t.addAll(Arrays.asList(1, 3, 2, 5, 4));
 
 		System.out.printf("%s\n", t.toString());
@@ -72,7 +73,7 @@ public class TreapTest {
 		t.remove(4);
 		assertFalse(t.contains(4), "assertFalse: t.contains(4) != false");
 
-		assertTrue( t.size() == 0, "Treap.size() != 5");
+		assertTrue(t.size() == 0, "Treap.size() != 5");
 		assertTrue(t.isValid(), "!Treap.isValid()");
 
 		t.addAll(1, 3, 2, 5, 4);
@@ -96,8 +97,7 @@ public class TreapTest {
 	}
 
 	// sorting test 
-	// add a bunch of random numbers to a Treap and a TreeSet which sorts them
-	// compare both times with Collections.sort
+	// add a bunch of random numbers to a Treap and a TreeSet	
 	public static void test2() {
 		ArrayList<Integer> nums = new ArrayList<>();
 		Treap<Integer>     ti   = new Treap<>();

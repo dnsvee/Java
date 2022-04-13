@@ -16,9 +16,6 @@ import java.util.function.BiPredicate;
 import java.util.Collection;
 
 // a TREAP; a tree datastructure
-
-// This one implements some set functionality
-
 // It's an alternative to a traditional red/black or AVL tree
 
 // The tree remains balanced by assigning a random number to each node and
@@ -26,14 +23,13 @@ import java.util.Collection;
 // with lower values (priority)
 
 public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K> {
-
 	// used for generating random priorities
 	Random rand = new Random();
 
 	// Node structure	
 	public class Node {
 		K    elem;
-		int  p; // priority of node
+		int  p; // priority of node; a random number
 		Node left, right;
 
 		public Node(K k) {
@@ -74,9 +70,9 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 		return arr;
 	}
 
-	// string representation of Treap 
-	// if empty: ()
-	// ex. output: ((null, 1, null), 3, (null, 5, ((null, 6, null), 7, null)))
+	// string representation of Treap
+	// example: ((null, 1, null), 3, (null, 5, ((null, 6, null), 7, null)))
+	// example: ()
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
@@ -103,7 +99,8 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 		Iterator<?> it1 = iterator();
 		Iterator<?> it2 = ((Iterable<?>) o).iterator();
 
-		// A treap is ordered so iterating over two treaps which are equal both will always // // produce the elements in the same order.
+		// A treap is ordered so iterating over two treaps which are equal both will
+		// produce their elements in the same order.
 		
 		// Two treaps are the same when the every element in the same position matches
 		while (it1.hasNext() && it2.hasNext()) {
@@ -112,36 +109,12 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 		}
 
 		// all elements match 
-		// only return true when both answers are false aka; this means all elements 
+		// only return true when both iterators are exhausted		
 		// have been visited and compared succesfully
 		return it1.hasNext() == it2.hasNext();
 	}
 
-	// utility method for toString()
-	// builds string representation by visiting each node in order and calling toString on 
-	// each element
-	public StringBuilder toStringSB(Node n, StringBuilder sb) {
-		sb.append("(");
-
-		if (n.left != null) 
-			sb = toStringSB(n.left, sb);
-		else
-			sb.append("null");
-
-		sb.append(", ");
-		sb.append(n.elem.toString());
-		sb.append(", ");
-
-		if (n.right != null) 
-			sb = toStringSB(n.right, sb);
-		else
-			sb.append("null");
-
-		sb.append(")");
-		return sb;
-	}
-
-	// search for element 'k' and return Node if found; otherwise null
+	// search for element 'k' and return found Node or null	
 	public Node search(K k) {
 		if (root == null) return null;
 
@@ -194,13 +167,13 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 		int z = size();
 		root = remove(k, root);
 		
-		// return true if element was removed; else false
+		// return true if element was removed else false
 		return z != size();
 	}
 
 	// called by remove(K, k)
 	// this method may change the structure of the Treap starting from Node n so it
-	// returns the (possibly changed ) root of the sub-Treap it has operated on
+	// returns the (possibly new) root of the sub-Treap it has operated on
 	public Node remove(K k, Node n) {
 		if (n == null) 
 			return null;
@@ -219,7 +192,7 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 
 		// element == K
 		
-		// if node is a leaf then just remove by setting node to null by returning null. 
+		// if node is a leaf then just remove by setting node to null and return null. 
 		
 		// the calling method will update the node by whatever this code returns
 		if (n.left == null && n.right == null) 
@@ -231,7 +204,7 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 
 		// if only left child exist or both children exist but priority of left node
 		// is higher then rotate the sub-tree to the right and move the node down in the right
-		// subtree and call remove on the node from this new position i
+		// subtree and call remove on the right node
 		if (n.left != null && (n.right == null || n.left.p < n.right.p)) {
 			n = rotateRight(n);
 			n.right      = remove(k, n.right);
@@ -262,7 +235,6 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 		sz   = 0;
 	}
 
-	// 
 	public int hashCode() {
 		return 0;
 	}
@@ -279,7 +251,7 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 	}
 
 	// add all elements from arguments
-	// returns true if an element was added; otherwise false
+	// returns true if an element was added else false
 	public boolean addAll(K... c) {
 		int z = size();
 
@@ -290,7 +262,7 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 	}
 
 	// add elem k to treap if it doesn't exist 
-	// return true if element was added; otherwise false	
+	// return true if element was added else false	
 	public boolean add(K k) {
 		int z = size();
 
@@ -307,7 +279,7 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 		return z != size();
 	}
 
-	// rotates root n to the left and right node becomes the new root
+	// rotates root n to the left and right child becomes the new root
 	// returns the new root	
 	public Node rotateLeft(Node n) {
 		Node t  = n.right;
@@ -317,7 +289,7 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 		return t;
 	}
 
-	// rotates root n to the right and left node becomes the new root
+	// rotates root n to the right and left child becomes the new root
 	// returns the new root	
 	public Node rotateRight(Node n) {
 		Node t = n.left;
@@ -329,7 +301,7 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 
 	// called by add(K k)
 	// may change the structure of the subtree 
-	// returns the (possibly changed) root
+	// returns the (possibly new) root
 	public Node add(K k, Node n) {
 		if (k == n.elem) 
 			return n;
@@ -367,9 +339,9 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 		}
 	}
 
-	// returns true if a node and it's children have a valid Treap ordering property
-	// nodes to the left compare as less than nodes to the right
-	// nodes closer to the root have higher penetration
+	// returns true if the Treap starting at 'n' is a valid Treap	
+	// nodes to the left are smaller then the nodes on the right	
+	// nodes closer to the root have higher priority
 	boolean testNode(Node n) {
 		if (n.left != null) {
 			if (n.left.p < n.p || n.left.elem.compareTo(n.elem) > 0) 
@@ -388,9 +360,9 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 		return true;
 	}
 
-	// returns true the treap is valid	
-	// nodes to the left compare as less than nodes to the right
-	// nodes closer to the root have higher penetration
+	// returns true if the treap is valid	
+	// nodes to the left are smaller in value than nodes on the right	
+	// nodes closer to the root have higher priority
 	public 	boolean isValid() {
 		if (root == null) 
 			return true;
@@ -434,10 +406,8 @@ public class Treap<K extends Comparable<K>> implements Iterable<K>, Collection<K
 	}
 
 
-	// calls fun on each elem in order and pass index of element to fun
-	// visit elements in order	
-	// pass element and index of element to fun 
-	// start at n
+	// calls fun on each elem in order and pass the index of the element and the element to fun
+	// visit elements in order		
 	public void forEach(BiConsumer<? super K, Integer> fun) {
 		if (root == null) 
 			return;
